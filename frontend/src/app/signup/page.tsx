@@ -3,8 +3,10 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
+import toast from 'react-hot-toast';
 import Link from 'next/link';
 import ParticleBackground from '@/components/ParticleBackground';
+import LoadingSpinner from '@/components/LoadingSpinner';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 axios.defaults.withCredentials = true;
@@ -14,19 +16,18 @@ export default function SignupPage() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
     try {
       const res = await axios.post(`${API_URL}/api/auth/register`, { email, name, password });
       sessionStorage.setItem('access_token', res.data.access_token);
+      toast.success('Registration successful!');
       router.push('/dashboard');
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Registrasi gagal');
+      toast.error(err.response?.data?.detail || 'Registrasi gagal');
     } finally {
       setLoading(false);
     }
@@ -41,12 +42,6 @@ export default function SignupPage() {
             <Link href="/" className="text-center block">
               <h1 className="text-3xl font-bold">YTMp3.in</h1>
             </Link>
-
-            {error && (
-              <div className="p-3 text-sm bg-red-900/30 border border-red-700 rounded-lg text-red-300">
-                {error}
-              </div>
-            )}
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
@@ -86,8 +81,9 @@ export default function SignupPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-2.5 bg-white text-black font-semibold rounded-lg hover:bg-zinc-200 disabled:opacity-50"
+                className="w-full py-2.5 bg-white text-black font-semibold rounded-lg hover:bg-zinc-200 disabled:opacity-50 flex items-center justify-center gap-2"
               >
+                {loading && <LoadingSpinner size="sm" />}
                 {loading ? 'Loading...' : 'Daftar'}
               </button>
             </form>

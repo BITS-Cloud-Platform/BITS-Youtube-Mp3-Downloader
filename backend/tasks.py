@@ -7,7 +7,11 @@ import signal
 from datetime import datetime
 from dotenv import load_dotenv
 
-load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"))
+env_path = os.path.join(os.path.dirname(__file__), ".env")
+if os.path.exists(env_path):
+    load_dotenv(env_path)
+else:
+    load_dotenv()
 
 # Add deno to PATH for yt-dlp (check both Docker and local paths)
 deno_paths = ["/usr/local/bin", "/home/bits/.deno/bin"]

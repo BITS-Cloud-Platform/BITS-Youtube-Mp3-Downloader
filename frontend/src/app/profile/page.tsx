@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
+import toast from 'react-hot-toast';
+import LoadingSpinner from '@/components/LoadingSpinner';
 import { User, Key, Mail, Shield, CheckCircle2, AlertCircle, ArrowLeft, Upload, LogOut } from 'lucide-react';
 
 type CookiesStatus = {
@@ -19,8 +21,6 @@ export default function ProfilePage() {
   const [name, setName] = useState('');
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
-  const [msg, setMsg] = useState('');
-  const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
   const [passwordSaving, setPasswordSaving] = useState(false);
 
@@ -28,7 +28,6 @@ export default function ProfilePage() {
   const [cookiesFile, setCookiesFile] = useState<File | null>(null);
   const [cookiesStatus, setCookiesStatus] = useState<CookiesStatus | null>(null);
   const [cookiesUploading, setCookiesUploading] = useState(false);
-  const [cookiesMsg, setCookiesMsg] = useState('');
 
   const fetchCookiesStatus = async () => {
     try {
@@ -54,13 +53,11 @@ export default function ProfilePage() {
   const handleUpdateName = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
-    setMsg('');
-    setError('');
     try {
       await axios.put(`${API_URL}/api/auth/update-profile`, { name });
-      setMsg('Nama berhasil diubah');
+      toast.success('Nama berhasil diubah');
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Gagal mengubah nama');
+      toast.error(err.response?.data?.detail || 'Gagal mengubah nama');
     } finally {
       setSaving(false);
     }
@@ -69,15 +66,13 @@ export default function ProfilePage() {
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setPasswordSaving(true);
-    setMsg('');
-    setError('');
     try {
       await axios.post(`${API_URL}/api/auth/change-password`, { old_password: oldPassword, new_password: newPassword });
-      setMsg('Password berhasil diubah');
+      toast.success('Password berhasil diubah');
       setOldPassword('');
       setNewPassword('');
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Gagal mengubah password');
+      toast.error(err.response?.data?.detail || 'Gagal mengubah password');
     } finally {
       setPasswordSaving(false);
     }
@@ -86,18 +81,17 @@ export default function ProfilePage() {
   const uploadCookies = async () => {
     if (!cookiesFile) return;
     setCookiesUploading(true);
-    setCookiesMsg('');
     const formData = new FormData();
     formData.append('file', cookiesFile);
     try {
       await axios.post(`${API_URL}/api/cookies/upload`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
-      setCookiesMsg('Cookies berhasil diunggah');
+      toast.success('Cookies berhasil diunggah');
       setCookiesFile(null);
       fetchCookiesStatus();
     } catch (err: any) {
-      setCookiesMsg(err.response?.data?.detail || 'Gagal mengunggah cookies');
+      toast.error(err.response?.data?.detail || 'Gagal mengunggah cookies');
     } finally {
       setCookiesUploading(false);
     }
@@ -106,6 +100,8 @@ export default function ProfilePage() {
   const handleLogout = async () => {
     try {
       await axios.post(`${API_URL}/api/auth/logout`);
+      sessionStorage.removeItem('access_token');
+      toast.success('Logged out successfully');
     } catch {
       // ignore
     }
@@ -152,17 +148,6 @@ export default function ProfilePage() {
             </button>
           </div>
         </div>
-
-        {msg && (
-          <div className="p-3 text-sm bg-green-900/30 border border-green-700 rounded-lg text-green-300">
-            {msg}
-          </div>
-        )}
-        {error && (
-          <div className="p-3 text-sm bg-red-900/30 border border-red-700 rounded-lg text-red-300">
-            {error}
-          </div>
-        )}
 
         {/* Stacked 1-Column Cards (Consistent with Dashboard) */}
         <div className="space-y-8">
@@ -267,12 +252,6 @@ export default function ProfilePage() {
                   {cookiesUploading ? 'Mengunggah...' : (cookiesStatus?.cookies_loaded ? 'Ganti Cookies' : 'Upload Cookies')}
                 </button>
               </div>
-
-              {cookiesMsg && (
-                <p className={`text-xs text-center ${cookiesMsg.includes('gagal') ? 'text-red-400' : 'text-green-400'}`}>
-                  {cookiesMsg}
-                </p>
-              )}
             </div>
           </div>
 

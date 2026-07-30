@@ -7,7 +7,11 @@ import logging
 from contextlib import asynccontextmanager
 from dotenv import load_dotenv
 
-load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"))
+env_path = os.path.join(os.path.dirname(__file__), ".env")
+if os.path.exists(env_path):
+    load_dotenv(env_path)
+else:
+    load_dotenv()
 
 from fastapi import FastAPI, Depends, HTTPException, Security, UploadFile, File, Request, Response, Cookie
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -42,6 +46,10 @@ security = HTTPBearer(auto_error=False)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     init_db()
+    from admin_utils import init_default_settings
+    from create_admin import create_default_admin
+    init_default_settings()
+    create_default_admin()
     yield
 
 
@@ -54,6 +62,9 @@ app.add_middleware(
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["Authorization", "Content-Type", "X-Requested-With"],
 )
+
+from admin_routes import router as admin_router
+app.include_router(admin_router, prefix="/api/admin", tags=["admin"])
 
 
 class LoginRequest(BaseModel):
@@ -240,6 +251,7 @@ def profile(user: User = Depends(get_current_user)):
         "id": user.id,
         "email": user.email,
         "name": user.name,
+        "is_admin": user.is_admin,
         "created_at": user.created_at.isoformat() if user.created_at else None,
     }
 

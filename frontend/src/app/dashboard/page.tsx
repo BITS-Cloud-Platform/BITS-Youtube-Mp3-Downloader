@@ -1,9 +1,11 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
-import { DownloadCloud, CheckCircle2, Clock, AlertCircle, FileAudio, LogOut, User as UserIcon, RefreshCw, Trash2, XCircle } from 'lucide-react';
+import toast from 'react-hot-toast';
+import LoadingSpinner from '@/components/LoadingSpinner';
+import { DownloadCloud, CheckCircle2, Clock, AlertCircle, FileAudio, LogOut, User as UserIcon, RefreshCw, Trash2, XCircle, Shield } from 'lucide-react';
 
 type PlaylistItem = {
   id: number;
@@ -37,7 +39,19 @@ export default function DashboardPage() {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [url, setUrl] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    const checkAdmin = async () => {
+      try {
+        const res = await axios.get(`${API_URL}/api/auth/profile`);
+        setIsAdmin(res.data.is_admin || false);
+      } catch {
+        // ignore
+      }
+    };
+    checkAdmin();
+  }, []);
 
   const fetchJobs = useCallback(async () => {
     try {
@@ -57,13 +71,13 @@ export default function DashboardPage() {
   const submitJob = async () => {
     if (!url) return;
     setLoading(true);
-    setError('');
     try {
       await axios.post(`${API_URL}/api/jobs`, { playlist_url: url });
       setUrl('');
       fetchJobs();
+      toast.success('Download started');
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Gagal memulai download');
+      toast.error(err.response?.data?.detail || 'Failed to start download');
     } finally {
       setLoading(false);
     }
@@ -81,9 +95,10 @@ export default function DashboardPage() {
   const handleResume = async (jobId: number) => {
     try {
       await axios.post(`${API_URL}/api/jobs/${jobId}/resume`);
+      toast.success('Job resumed');
       fetchJobs();
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Gagal meresume job');
+      toast.error(err.response?.data?.detail || 'Gagal meresume job');
     }
   };
 
@@ -94,9 +109,10 @@ export default function DashboardPage() {
   const handleCancel = async (jobId: number) => {
     try {
       await axios.post(`${API_URL}/api/jobs/${jobId}/cancel`);
+      toast.success('Job cancelled');
       fetchJobs();
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Gagal membatalkan');
+      toast.error(err.response?.data?.detail || 'Gagal membatalkan');
     }
   };
 
@@ -132,9 +148,10 @@ export default function DashboardPage() {
   const handleDelete = async (jobId: number) => {
     try {
       await axios.delete(`${API_URL}/api/jobs/${jobId}`);
+      toast.success('Job deleted');
       fetchJobs();
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Gagal menghapus job');
+      toast.error(err.response?.data?.detail || 'Gagal menghapus job');
     }
   };
 
@@ -188,6 +205,15 @@ export default function DashboardPage() {
           </div>
           
           <div className="flex gap-4">
+            {isAdmin && (
+              <button
+                onClick={() => router.push('/admin')}
+                className="neo-button w-10 h-10 rounded-full flex items-center justify-center cursor-pointer text-purple-400 hover:text-purple-300"
+                title="Admin Panel"
+              >
+                <Shield className="w-5 h-5" />
+              </button>
+            )}
             <button
               onClick={() => router.push('/profile')}
               className="neo-button w-10 h-10 rounded-full flex items-center justify-center cursor-pointer text-zinc-400 hover:text-white"
@@ -231,7 +257,6 @@ export default function DashboardPage() {
               {loading ? 'Processing...' : 'Convert'}
             </button>
           </div>
-          {error && <p className="text-red-400 text-sm mt-4 px-2">{error}</p>}
         </div>
 
         {/* Jobs List */}

@@ -1,8 +1,10 @@
 # SQLite DB & user cookies
-data/
+data/*
+!data/.gitkeep
 
 # Downloaded files
-storage/
+storage/*
+!storage/.gitkeep
 
 # Python virtual environment
 .venv/

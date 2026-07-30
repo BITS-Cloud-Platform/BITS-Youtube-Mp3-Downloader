@@ -4,7 +4,7 @@ services:
     ports:
       - "3000:3000"
     env_file:
-      - .env
+      - .env.production
     depends_on:
       - backend
 
@@ -13,7 +13,7 @@ services:
     ports:
       - "8000:8000"
     env_file:
-      - .env
+      - .env.production
     volumes:
       - app_data:/app/data
       - app_storage:/app/storage
@@ -24,7 +24,7 @@ services:
     build: ./backend
     command: celery -A tasks worker --loglevel=info --concurrency=2
     env_file:
-      - .env
+      - .env.production
     volumes:
       - app_data:/app/data
       - app_storage:/app/storage

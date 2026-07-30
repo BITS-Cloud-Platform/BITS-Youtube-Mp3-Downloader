@@ -26,10 +26,10 @@ YouTube video and playlist downloader with multi-format audio conversion (M4A, M
 
 1. Copy environment file:
 ```bash
-cp .env.example .env
+cp .env.example .env.production
 ```
 
-2. Edit `.env` and set your values:
+2. Edit `.env.production` and set your values:
 ```env
 DATABASE_URL=sqlite:////app/data/downloads.db
 REDIS_URL=redis://redis:6379/0
@@ -57,9 +57,13 @@ docker-compose up -d
 
 ### Development (Local)
 
-1. Copy development environment file:
+1. Setup environment files:
 ```bash
-cp .env.development .env
+# Backend environment
+cp .env.development backend/.env
+
+# Frontend environment
+cp .env.development frontend/.env.local
 ```
 
 2. Install Redis:
@@ -114,6 +118,22 @@ npm run dev
 10. Access:
 - Frontend: http://localhost:3000
 - Backend API: http://localhost:8000
+
+## Environment Files Structure
+
+### For Local Development:
+- `backend/.env` - Backend configuration (local paths, localhost Redis)
+- `frontend/.env.local` - Frontend configuration
+- `.env.development` - Template for development
+
+### For Docker Production:
+- `.env.production` - Docker configuration (container paths, service names)
+- Environment variables are loaded from `.env.production` via docker-compose.yml
+
+### How It Works:
+The application automatically detects the environment:
+- **Local**: Looks for `backend/.env` first, uses local paths
+- **Docker**: Uses environment variables injected by Docker Compose from `.env.production`
 
 ## Environment Variables
 
