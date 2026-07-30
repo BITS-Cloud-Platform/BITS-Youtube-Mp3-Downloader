@@ -1,23 +1,34 @@
+# Stage 1: Build
 FROM node:20-alpine AS builder
 
 WORKDIR /app
 
 COPY package*.json ./
-RUN npm install
+RUN npm ci
 
 COPY . .
 RUN npm run build
 
-FROM node:20-alpine
+# Stage 2: Production runner
+FROM node:20-alpine AS runner
 
 WORKDIR /app
 
-COPY --from=builder /app/.next ./.next
-COPY --from=builder /app/package.json .
-COPY --from=builder /app/next.config.js .
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/src ./src
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
+
+# Copy standalone server
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+# Copy static assets
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+USER nextjs
 
 EXPOSE 3000
 
-CMD ["npx", "next", "start", "-p", "3000"]
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
+
+CMD ["node", "server.js"]

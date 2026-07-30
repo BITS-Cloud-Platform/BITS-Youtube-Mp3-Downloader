@@ -2,11 +2,14 @@ services:
   frontend:
     build: ./frontend
     ports:
-      - "3000:3000"
+      - "3004:3000"
     env_file:
       - .env.production
     depends_on:
       - backend
+    restart: unless-stopped
+    networks:
+      - ytmp3-network
 
   backend:
     build: ./backend
@@ -19,6 +22,9 @@ services:
       - app_storage:/app/storage
     depends_on:
       - redis
+    restart: unless-stopped
+    networks:
+      - ytmp3-network
 
   worker:
     build: ./backend
@@ -31,14 +37,23 @@ services:
     depends_on:
       - backend
       - redis
+    restart: unless-stopped
+    networks:
+      - ytmp3-network
 
   redis:
     image: redis:7-alpine
     volumes:
       - redis_data:/data
+    restart: unless-stopped
+    networks:
+      - ytmp3-network
 
 volumes:
   app_data:
   app_storage:
   redis_data:
 
+networks:
+  ytmp3-network:
+    driver: bridge
