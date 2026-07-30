@@ -266,12 +266,12 @@ export default function DashboardPage() {
                       </button>
                     )}
                     
-                    {job.status !== 'downloading' && job.status !== 'queued' && (job.status === 'failed' || (job.status === 'completed' && job.completed_items < job.total_items)) && (
+                    {job.items?.some(i => i.status === 'failed' || i.status === 'queued') && job.status !== 'queued' && (
                       <button
                         onClick={() => handleResume(job.id)}
                         className="neo-button px-5 py-2.5 rounded-xl font-medium text-yellow-400 hover:text-yellow-300 text-sm whitespace-nowrap flex-shrink-0 border border-yellow-900/30"
                       >
-                        {job.status === 'failed' ? 'Ulangi' : 'Lanjutkan (Resume)'}
+                        {job.status === 'failed' ? 'Ulangi' : 'Lanjutkan'}
                       </button>
                     )}
                   </div>
@@ -305,7 +305,7 @@ export default function DashboardPage() {
                                 Download
                               </button>
                             )}
-                            {item.status === 'failed' && job.status !== 'downloading' && job.status !== 'queued' && (
+                            {item.status === 'failed' && job.status !== 'queued' && (
                               <button
                                 onClick={() => handleRetryItem(job.id)}
                                 className="neo-button px-3 py-1.5 rounded-lg text-xs font-medium text-yellow-400 hover:text-yellow-300 whitespace-nowrap flex-shrink-0"
