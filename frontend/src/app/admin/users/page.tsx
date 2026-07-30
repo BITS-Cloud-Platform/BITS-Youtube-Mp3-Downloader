@@ -282,33 +282,27 @@ export default function AdminUsers() {
                     </div>
 
                     {/* Stats */}
-                    <div className="hidden lg:flex items-center gap-4 text-sm">
+                    <div className="hidden lg:flex items-center gap-3 text-sm">
                       <div className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-500/5 rounded-lg border border-blue-500/10">
                         <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                         </svg>
-                        <div>
-                          <div className="text-white font-semibold">{user.stats.total_jobs}</div>
-                          <div className="text-xs text-gray-400">Jobs</div>
-                        </div>
+                        <span className="text-white font-medium">{user.stats.total_jobs}</span>
+                        <span className="text-gray-400">Jobs</span>
                       </div>
                       <div className="flex items-center gap-1.5 px-3 py-1.5 bg-green-500/5 rounded-lg border border-green-500/10">
                         <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
-                        <div>
-                          <div className="text-white font-semibold">{user.stats.completed_jobs}</div>
-                          <div className="text-xs text-gray-400">Done</div>
-                        </div>
+                        <span className="text-white font-medium">{user.stats.completed_jobs}</span>
+                        <span className="text-gray-400">Done</span>
                       </div>
                       <div className="flex items-center gap-1.5 px-3 py-1.5 bg-orange-500/5 rounded-lg border border-orange-500/10">
                         <svg className="w-4 h-4 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
                         </svg>
-                        <div>
-                          <div className="text-white font-semibold">{user.stats.disk_usage.total_gb} GB</div>
-                          <div className="text-xs text-gray-400">Storage</div>
-                        </div>
+                        <span className="text-white font-medium">{user.stats.disk_usage.total_gb} GB</span>
+                        <span className="text-gray-400">Storage</span>
                       </div>
                     </div>
 
