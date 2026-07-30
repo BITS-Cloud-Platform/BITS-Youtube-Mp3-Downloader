@@ -1,0 +1,18 @@
+# SQLite DB & user cookies
+data/
+
+# Downloaded files
+storage/
+
+# Python virtual environment
+.venv/
+backend/.venv/
+**/__pycache__/
+*.pyc
+
+# Node dependencies and Next.js build files
+node_modules/
+frontend/node_modules/
+frontend/.next/
+.next/
+next-env.d.ts
