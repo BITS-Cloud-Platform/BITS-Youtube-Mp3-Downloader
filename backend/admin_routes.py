@@ -74,6 +74,7 @@ STORAGE_DIR = os.environ.get("STORAGE_DIR", "/app/storage")
 class UpdateUserRequest(BaseModel):
     name: Optional[str] = None
     email: Optional[str] = None
+    password: Optional[str] = None
     is_active: Optional[bool] = None
     is_admin: Optional[bool] = None
 
@@ -230,6 +231,9 @@ def update_user(
         if existing:
             raise HTTPException(status_code=400, detail="Email already in use")
         target_user.email = request.email
+    if request.password is not None:
+        hashed = bcrypt.hashpw(request.password.encode(), bcrypt.gensalt())
+        target_user.password_hash = hashed.decode()
     if request.is_active is not None:
         target_user.is_active = request.is_active
     if request.is_admin is not None:

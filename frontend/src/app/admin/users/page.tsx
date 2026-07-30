@@ -45,6 +45,7 @@ export default function AdminUsers() {
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [editName, setEditName] = useState("");
   const [editEmail, setEditEmail] = useState("");
+  const [editPassword, setEditPassword] = useState("");
 
   useEffect(() => {
     fetchUsers();
@@ -133,6 +134,7 @@ export default function AdminUsers() {
     setEditingUser(user);
     setEditName(user.name);
     setEditEmail(user.email);
+    setEditPassword("");
     setEditModalOpen(true);
   };
 
@@ -140,9 +142,14 @@ export default function AdminUsers() {
     if (!editingUser) return;
     
     try {
+      const payload: any = { name: editName, email: editEmail };
+      if (editPassword) {
+        payload.password = editPassword;
+      }
+      
       await axios.put(
         `${API_URL}/api/admin/users/${editingUser.id}`,
-        { name: editName, email: editEmail },
+        payload,
         { withCredentials: true }
       );
       toast.success("User updated successfully");
@@ -396,6 +403,17 @@ export default function AdminUsers() {
                   value={editEmail}
                   onChange={(e) => setEditEmail(e.target.value)}
                   className="w-full px-4 py-2 bg-black border border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">New Password</label>
+                <input
+                  type="password"
+                  value={editPassword}
+                  onChange={(e) => setEditPassword(e.target.value)}
+                  placeholder="Leave blank to keep current password"
+                  className="w-full px-4 py-2 bg-black border border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white placeholder-gray-500"
                 />
               </div>
             </div>
