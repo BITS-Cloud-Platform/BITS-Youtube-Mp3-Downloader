@@ -324,13 +324,16 @@ def download_playlist(self, job_id: int, playlist_url: str):
             job.completed_items = completed_count
             db.commit()
 
+        # Calculate total file size from completed items
+        total_size = sum(item.file_size or 0 for item, _ in playlist_items if item.status == "completed" and item.file_size)
+        job.file_size = total_size
+
         # If single video, propagate details to parent job
         if total_count == 1 and len(playlist_items) == 1:
             single_item = playlist_items[0][0]
             if single_item.status == "completed":
                 job.filename = single_item.filename
                 job.file_path = single_item.file_path
-                job.file_size = single_item.file_size
                 job.completed_items = 1
 
         failed_count = sum(1 for item, _ in playlist_items if item.status == "failed")

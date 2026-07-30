@@ -1,9 +1,12 @@
 # ─── Environment & Secrets ───────────────────────────────────────────────────
+# NEVER commit real .env files — they contain secrets and credentials
 .env
 .env.local
 .env.*.local
 .env.development
 .env.production
+backend/.env
+frontend/.env.local
 
 # ─── Python ──────────────────────────────────────────────────────────────────
 __pycache__/
@@ -27,6 +30,14 @@ venv/
 .venv/
 backend/venv/
 backend/.venv/
+*.manifest
+*.spec
+
+# ─── Celery ──────────────────────────────────────────────────────────────────
+celerybeat-schedule
+celerybeat.pid
+*.pid
+*.pidb
 
 # ─── Node.js & Next.js ──────────────────────────────────────────────────────
 node_modules/
@@ -34,10 +45,26 @@ frontend/node_modules/
 .next/
 frontend/.next/
 out/
-build/
-dist/
 *.tsbuildinfo
 next-env.d.ts
+
+# ─── Testing & Coverage ──────────────────────────────────────────────────────
+.coverage
+.coverage.*
+.nyc_output/
+coverage/
+*.gcov
+*.gcda
+*.gcno
+.pytest_cache/
+htmlcov/
+*.cover
+.tox/
+.hypothesis/
+.mypy_cache/
+.ruff_cache/
+.dmypy.json
+dmypy.json
 
 # ─── IDE & Editors ───────────────────────────────────────────────────────────
 .vscode/
@@ -47,6 +74,13 @@ next-env.d.ts
 *~
 *.sublime-workspace
 *.sublime-project
+*.sublime-build
+*.komodoproject
+.project
+.classpath
+.settings/
+.vscode-server/
+*.code-workspace
 
 # ─── OS Files ────────────────────────────────────────────────────────────────
 .DS_Store
@@ -57,6 +91,9 @@ next-env.d.ts
 ehthumbs.db
 Thumbs.db
 Desktop.ini
+*.lnk
+*.localized
+Icon?
 
 # ─── Logs & Debug ────────────────────────────────────────────────────────────
 *.log
@@ -65,18 +102,16 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
-
-# ─── Celery ──────────────────────────────────────────────────────────────────
-celerybeat-schedule
-celerybeat.pid
-*.pid
+debug.log
+*.stackdump
 
 # ─── Database ────────────────────────────────────────────────────────────────
 *.sqlite
 *.sqlite3
 *.db
+*.db-journal
+*.db-wal
 data/*
-!data/.gitkeep
 
 # ─── Downloads & Storage ─────────────────────────────────────────────────────
 storage/*
@@ -90,3 +125,9 @@ ffmpeg
 ffprobe
 backend/ffmpeg
 backend/ffprobe
+
+# ─── Temporary & Backup Files ────────────────────────────────────────────────
+*.bak
+*.orig
+*.tmp
+*.temp

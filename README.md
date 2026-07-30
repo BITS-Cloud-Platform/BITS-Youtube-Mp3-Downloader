@@ -2,7 +2,10 @@
   <img src="https://ytmp3.bits.co.id/favicon.ico" alt="YTMp3" width="80" />
   <h1 align="center">YTMp3.in</h1>
   <p align="center">
-    YouTube Audio Downloader — Download, Convert, Enjoy.
+    <strong>YouTube Audio Downloader</strong>
+    <br />
+    Download, Convert, Enjoy — Free & Fast YouTube to MP3/M4A Converter
+    <br />
     <br />
     <a href="https://ytmp3.bits.co.id"><strong>ytmp3.bits.co.id »</strong></a>
     <br />
@@ -16,6 +19,8 @@
     <a href="#development">Development</a>
     ·
     <a href="#admin-panel">Admin Panel</a>
+    ·
+    <a href="#api-endpoints">API</a>
   </p>
   <p>
     <img src="https://img.shields.io/badge/Next.js-15-black?style=flat&logo=next.js" alt="Next.js 15" />
@@ -24,24 +29,21 @@
     <img src="https://img.shields.io/badge/Docker-Compose-2496ED?style=flat&logo=docker" alt="Docker Compose" />
     <img src="https://img.shields.io/badge/license-MIT-green?style=flat" alt="MIT License" />
   </p>
-  <p>
-    Built with ❤️ by <a href="https://bits.co.id"><strong>Banten IT Solutions</strong></a>
-  </p>
 </div>
 
 ---
 
-## Table of Contents
+## 📋 Table of Contents
 
 - [Features](#features)
 - [Live Demo](#live-demo)
 - [Tech Stack](#tech-stack)
+- [Project Structure](#project-structure)
 - [Quick Start (Docker)](#quick-start-docker)
 - [Development](#development)
 - [Environment Configuration](#environment-configuration)
 - [API Endpoints](#api-endpoints)
 - [Admin Panel](#admin-panel)
-- [Project Structure](#project-structure)
 - [Docker Volumes](#docker-volumes)
 - [Troubleshooting](#troubleshooting)
 - [Security Notes](#security-notes)
@@ -49,47 +51,99 @@
 
 ---
 
-## Features
+## ✨ Features
 
-- **Download YouTube Videos & Playlists** — Single video or full playlist with progress tracking
-- **Multi-Format Audio Conversion** — M4A (original), MP3, OPUS, OGG, FLAC
-- **Real-Time Progress** — Live download and conversion progress updates
-- **Cancel & Resume** — Cancel ongoing downloads and resume them later
-- **User Authentication** — Register, login, profile management
-- **Admin Dashboard** — User management, job monitoring, disk usage, system stats
-- **Anti-Bot Protection** — Bypass YouTube bot detection using Deno runtime
-- **Docker Support** — One-command deployment with Docker Compose
-- **Responsive UI** — Modern, mobile-friendly interface built with TailwindCSS
-
----
-
-## Live Demo
-
-The application is live at: **[https://ytmp3.bits.co.id](https://ytmp3.bits.co.id)**
+| Feature | Description |
+|---------|-------------|
+| **Download YouTube Videos & Playlists** | Single video or full playlist with progress tracking |
+| **Multi-Format Audio Conversion** | M4A (original), MP3, OPUS, OGG, FLAC |
+| **Real-Time Progress** | Live download and conversion progress updates |
+| **Cancel & Resume** | Cancel ongoing downloads and resume them later |
+| **User Authentication** | Register, login, profile management with JWT |
+| **Admin Dashboard** | User management, job monitoring, disk usage, system stats |
+| **Anti-Bot Protection** | Bypass YouTube bot detection using Deno runtime |
+| **Docker Support** | One-command deployment with Docker Compose |
+| **Responsive UI** | Modern, mobile-friendly interface built with TailwindCSS |
 
 ---
 
-## Tech Stack
+## 🌐 Live Demo
+
+The application is live and running at:
+
+<div align="center">
+  <a href="https://ytmp3.bits.co.id" style="font-size: 1.5em; font-weight: bold;">
+    🔗 https://ytmp3.bits.co.id
+  </a>
+</div>
+
+---
+
+## 🛠️ Tech Stack
 
 | Layer | Technology |
 |-------|-----------|
 | **Frontend** | Next.js 15, TypeScript, TailwindCSS |
-| **Backend** | FastAPI, SQLAlchemy, Celery |
+| **Backend** | FastAPI (Python 3.12), SQLAlchemy, Celery |
 | **Queue & Cache** | Redis 7 |
-| **Downloader** | yt-dlp with Deno runtime |
+| **Downloader** | yt-dlp with Deno runtime (anti-bot) |
 | **Converter** | FFmpeg |
 | **Auth** | JWT (access + refresh tokens) + bcrypt |
 | **Container** | Docker & Docker Compose |
+| **Reverse Proxy** | Nginx |
 
 ---
 
-## Quick Start (Docker)
+## 📁 Project Structure
 
-The fastest way to run the project in production:
+```
+ytmp3/
+├── backend/
+│   ├── main.py              # FastAPI application & routes
+│   ├── models.py            # SQLAlchemy database models
+│   ├── tasks.py             # Celery async tasks
+│   ├── admin_routes.py      # Admin API endpoints
+│   ├── admin_utils.py       # Admin utility functions
+│   ├── create_admin.py      # Default admin auto-creator
+│   ├── celery_app.py        # Celery configuration
+│   ├── requirements.txt     # Python dependencies
+│   └── Dockerfile           # Backend & worker container
+├── frontend/
+│   ├── src/
+│   │   ├── app/
+│   │   │   ├── page.tsx            # Landing page
+│   │   │   ├── layout.tsx          # Root layout
+│   │   │   ├── login/              # Login page
+│   │   │   ├── signup/             # Registration
+│   │   │   ├── dashboard/          # User dashboard
+│   │   │   ├── profile/            # User profile
+│   │   │   └── admin/              # Admin panel
+│   │   │       ├── page.tsx        # Dashboard overview
+│   │   │       ├── users/          # User management
+│   │   │       ├── jobs/           # Job monitoring
+│   │   │       └── settings/       # System settings
+│   │   ├── components/             # Shared UI components
+│   │   └── globals.css             # Global styles
+│   ├── Dockerfile
+│   └── package.json
+├── nginx/
+│   └── nginx.conf            # Nginx reverse proxy config
+├── data/                     # SQLite database (gitignored)
+├── storage/                  # Downloaded files (gitignored)
+├── docker-compose.yml        # Docker orchestration
+├── .env.example              # Environment template
+└── .gitignore
+```
+
+---
+
+## 🚀 Quick Start (Docker)
+
+The fastest way to deploy the project in production:
 
 ### Prerequisites
 
-- Docker & Docker Compose v2
+- Docker & Docker Compose v2+
 - Git
 
 ### Steps
@@ -103,33 +157,33 @@ cd ytmp3
 cp .env.example .env.production
 
 # 3. Edit the production environment
-#    IMPORTANT: Generate a strong SECRET_KEY
+#    IMPORTANT: Generate a strong SECRET_KEY (see below)
 nano .env.production
 ```
 
-**.env.production reference:**
+**Generate a secure SECRET_KEY:**
+```bash
+openssl rand -hex 32
+# Example output: 4fae51d20439cbc34e2eebeb97931a3a9a48fb4e52049427f4aabd7a6d5a0386
+```
 
+**.env.production reference:**
 ```env
 DATABASE_URL=sqlite:////app/data/downloads.db
 REDIS_URL=redis://redis:6379/0
-SECRET_KEY=generate-a-secure-random-key
+SECRET_KEY=generate-a-secure-random-key-here
 YTDL_FORMAT=m4a
 STORAGE_DIR=/app/storage
 ALLOWED_ORIGINS=http://localhost:3000,https://yourdomain.com
 PASSWORD_MIN_LENGTH=8
 NEXT_PUBLIC_API_URL=https://yourdomain.com
-DEFAULT_ADMIN_EMAIL=admin@mail.com
+DEFAULT_ADMIN_EMAIL=admin@yourdomain.com
 DEFAULT_ADMIN_PASSWORD=change-me-immediately
 ```
 
-> **Generate a secure SECRET_KEY:**
-> ```bash
-> openssl rand -hex 32
-> ```
-
 ```bash
 # 4. Start all services
-docker-compose up -d
+docker compose up -d
 
 # 5. Access the application
 #    Frontend : http://localhost:3000
@@ -138,8 +192,9 @@ docker-compose up -d
 
 ### Docker Services
 
-| Service | Image/ Build | Port | Description |
-|---------|-------------|------|-------------|
+| Service | Image/Build | Port (Internal) | Description |
+|---------|-------------|-----------------|-------------|
+| `nginx` | `nginx:alpine` | 80 | Reverse proxy |
 | `frontend` | `./frontend` (Dockerfile) | 3000 | Next.js UI |
 | `backend` | `./backend` (Dockerfile) | 8000 | FastAPI server |
 | `worker` | `./backend` (Dockerfile) | — | Celery async worker |
@@ -147,7 +202,7 @@ docker-compose up -d
 
 ---
 
-## Development
+## 💻 Development
 
 ### Prerequisites
 
@@ -205,7 +260,7 @@ npm install
 
 ### 6. Run Services
 
-Open three terminals:
+Open separate terminals for each service:
 
 **Terminal 1 — Redis:**
 ```bash
@@ -223,7 +278,7 @@ celery -A tasks worker --loglevel=info --concurrency=2
 **Terminal 3 — Backend:**
 ```bash
 cd backend
-source .venv/bin/activate
+source .venp/bin/activate
 export PATH="$HOME/.deno/bin:$PATH"
 uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 ```
@@ -241,7 +296,7 @@ npm run dev
 
 ---
 
-## Environment Configuration
+## ⚙️ Environment Configuration
 
 ### Auto-Detection Logic
 
@@ -250,22 +305,22 @@ The backend automatically detects the environment:
 ```python
 env_path = os.path.join(os.path.dirname(__file__), ".env")
 if os.path.exists(env_path):
-    load_dotenv(env_path)    # Local: loads from backend/.env
+    load_dotenv(env_path)    # Local development
 else:
-    load_dotenv()            # Docker: loads from environment variables
+    load_dotenv()            # Docker / production
 ```
 
 ### File Structure
 
 ```
 ytmp3/
-├── .env.example            # Template/reference for all environments
-├── .env.development        # Template for local development (not tracked)
-├── .env.production         # Configuration for Docker production (not tracked)
+├── .env.example            # Template — safe to commit
+├── .env.development        # Local dev config — gitignored
+├── .env.production         # Production config — gitignored
 ├── backend/
-│   └── .env               # Backend config for local dev (gitignored)
+│   └── .env               # Backend local dev — gitignored
 └── frontend/
-    └── .env.local         # Frontend config for local dev (gitignored)
+    └── .env.local         # Frontend local dev — gitignored
 ```
 
 ### Required Environment Variables
@@ -290,7 +345,7 @@ ytmp3/
 
 ---
 
-## API Endpoints
+## 📡 API Endpoints
 
 ### Authentication
 
@@ -338,7 +393,7 @@ ytmp3/
 
 ---
 
-## Admin Panel
+## 🔐 Admin Panel
 
 The application includes a full-featured admin dashboard accessible to users with admin privileges.
 
@@ -347,18 +402,11 @@ The application includes a full-featured admin dashboard accessible to users wit
 On first startup, a default admin account is automatically created:
 
 ```
-Email:    admin@mail.com
+Email:    (set via DEFAULT_ADMIN_EMAIL in .env)
 Password: (set via DEFAULT_ADMIN_PASSWORD in .env)
 ```
 
 > **⚠️ IMPORTANT:** Change the default password immediately after first login!
-
-To customize the default admin credentials, set these environment variables:
-
-```env
-DEFAULT_ADMIN_EMAIL=your@email.com
-DEFAULT_ADMIN_PASSWORD=your-secure-password
-```
 
 ### Accessing the Admin Panel
 
@@ -371,7 +419,7 @@ DEFAULT_ADMIN_PASSWORD=your-secure-password
 | Feature | Description |
 |---------|-------------|
 | **Dashboard** | Overview stats (users, jobs, disk, CPU/RAM) |
-| **User Management** | List users, toggle active/ admin status, delete users |
+| **User Management** | List users, toggle active/admin status, delete users |
 | **Job Monitoring** | View all jobs across users, filter by status |
 | **Settings** | Configure retention days, max file size, auto-cleanup |
 | **File Cleanup** | Dry-run preview, delete old files by retention policy |
@@ -395,49 +443,7 @@ DEFAULT_ADMIN_PASSWORD=your-secure-password
 
 ---
 
-## Project Structure
-
-```
-ytmp3/
-├── backend/
-│   ├── main.py              # FastAPI application & routes
-│   ├── models.py            # SQLAlchemy database models
-│   ├── tasks.py             # Celery async tasks
-│   ├── admin_routes.py      # Admin API endpoints
-│   ├── admin_utils.py       # Admin utility functions
-│   ├── create_admin.py      # Default admin auto-creator
-│   ├── celery_app.py        # Celery configuration
-│   ├── requirements.txt     # Python dependencies
-│   ├── Dockerfile           # Backend & worker container
-│   └── .env                 # Local backend env (gitignored)
-├── frontend/
-│   ├── src/
-│   │   ├── app/
-│   │   │   ├── page.tsx            # Landing page
-│   │   │   ├── layout.tsx          # Root layout
-│   │   │   ├── login/              # Login page
-│   │   │   ├── signup/             # Registration
-│   │   │   ├── dashboard/          # User dashboard
-│   │   │   ├── profile/            # User profile
-│   │   │   └── admin/              # Admin panel
-│   │   │       ├── page.tsx        # Dashboard
-│   │   │       ├── users/          # User management
-│   │   │       ├── jobs/           # Job monitoring
-│   │   │       └── settings/       # System settings
-│   │   ├── components/             # Shared components
-│   │   └── globals.css             # Global styles
-│   ├── Dockerfile
-│   └── package.json
-├── data/                   # SQLite database (gitignored)
-├── storage/                # Downloaded files (gitignored)
-├── docker-compose.yml      # Docker orchestration
-├── .env.example            # Environment template
-└── .gitignore
-```
-
----
-
-## Docker Volumes
+## 📦 Docker Volumes
 
 | Volume | Mount | Description |
 |--------|-------|-------------|
@@ -447,14 +453,14 @@ ytmp3/
 
 ---
 
-## Troubleshooting
+## 🔧 Troubleshooting
 
 ### Deno Not Found
 
 Ensure Deno is installed and in your PATH. For Docker, rebuild the image:
 
 ```bash
-docker-compose build backend worker
+docker compose build backend worker
 ```
 
 ### CORS Errors
@@ -480,39 +486,65 @@ Default timeout is 3 minutes per item. For large files or slow connections, adju
 
 ---
 
-## Security Notes
+## 🛡️ Security Notes
 
 - **SECRET_KEY** must be a cryptographically random value generated with `openssl rand -hex 32`
-- Never commit real `.env` files to version control
+- **Never commit real `.env` files** to version control
 - Change default admin credentials immediately after deployment
 - All passwords are hashed using bcrypt before storage
 - JWT tokens expire; refresh tokens are used for seamless re-authentication
 - Admin routes are protected by role-based access control (`is_admin` flag)
 - CORS is enforced; only origins in `ALLOWED_ORIGINS` can access the API
+- The `.gitignore` is configured to exclude all sensitive files
 
 ---
 
-## License
+## 📄 License
 
 Distributed under the MIT License. See `LICENSE` for more information.
 
 ---
 
+## 🤝 Credits
+
 <div align="center">
   <br />
+  <table>
+    <tr>
+      <td align="center">
+        <strong>Developed & Maintained by</strong>
+        <br />
+        <br />
+        <a href="https://bits.co.id">
+          <img src="https://bits.co.id/assets/img/logo.png" alt="Banten IT Solutions" height="60" />
+        </a>
+        <br />
+        <br />
+        <a href="https://bits.co.id"><strong>Banten IT Solutions</strong></a>
+        <br />
+        <a href="https://bits.co.id">https://bits.co.id</a>
+        <br />
+        <br />
+        <em>Professional IT Solutions &amp; Digital Services</em>
+        <br />
+        <br />
+        <a href="mailto:contact@bits.co.id">contact@bits.co.id</a>
+      </td>
+    </tr>
+  </table>
+  <br />
   <p>
-    <strong>YTMp3.in</strong> — Developed & Maintained by<br />
-    <a href="https://bits.co.id">
-      <img src="https://bits.co.id/assets/img/logo.png" alt="Banten IT Solutions" height="50" />
-      <br />
-      <strong>Banten IT Solutions</strong>
-    </a>
-  </p>
-  <p>
-    <a href="https://bits.co.id">https://bits.co.id</a>
-  </p>
-  <p>
-    <sub>Professional IT Solutions & Digital Services</sub>
+    <sub>Built with passion by the team at <strong>Banten IT Solutions</strong></sub>
   </p>
   <br />
+</div>
+
+---
+
+<div align="center">
+  <p>
+    <a href="https://ytmp3.bits.co.id"><strong>ytmp3.bits.co.id</strong></a>
+    <br />
+    <sub>&copy; 2024 Banten IT Solutions. All rights reserved.</sub>
+  </p>
 </div>
