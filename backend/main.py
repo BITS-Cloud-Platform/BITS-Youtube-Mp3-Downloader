@@ -344,9 +344,6 @@ def resume_job(job_id: int, user: User = Depends(get_current_user), db: Session 
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")
     
-    if job.status == "downloading" or job.status == "queued":
-        raise HTTPException(status_code=400, detail="Job is already in progress")
-        
     job.status = "queued"
     db.commit()
     download_playlist.delay(job.id, job.playlist_url)
