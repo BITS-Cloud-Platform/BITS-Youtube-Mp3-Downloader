@@ -1,13 +1,17 @@
 import os
 import shutil
 import uuid
+from dotenv import load_dotenv
+
+load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"))
+
 import yt_dlp
 from celery_app import celery_app
 from models import Session, Job
 
 STORAGE_DIR = os.environ.get("STORAGE_DIR", "/app/storage")
 YTDL_FORMAT = os.environ.get("YTDL_FORMAT", "m4a")
-COOKIES_FILE = os.environ.get("COOKIES_FILE", "")
+COOKIES_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data", "cookies")
 
 os.makedirs(STORAGE_DIR, exist_ok=True)
 
@@ -54,8 +58,9 @@ def download_playlist(self, job_id: int, playlist_url: str):
         "no_warnings": True,
     }
 
-    if COOKIES_FILE and os.path.exists(COOKIES_FILE):
-        ydl_opts["cookiefile"] = COOKIES_FILE
+    user_cookies = os.path.join(COOKIES_DIR, f"{job.user_id}.txt")
+    if os.path.exists(user_cookies):
+        ydl_opts["cookiefile"] = user_cookies
 
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:

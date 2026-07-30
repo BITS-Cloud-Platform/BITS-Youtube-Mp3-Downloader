@@ -1,4 +1,9 @@
+import os
 from datetime import datetime
+from dotenv import load_dotenv
+
+load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"))
+
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, Float
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import create_engine, event
@@ -7,7 +12,7 @@ from contextlib import contextmanager
 
 Base = declarative_base()
 
-DATABASE_URL = "sqlite:////app/data/downloads.db"
+DATABASE_URL = os.environ.get("DATABASE_URL", "sqlite:////app/data/downloads.db")
 
 engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False}, echo=False)
 session_factory = sessionmaker(bind=engine)
@@ -24,6 +29,7 @@ class Job(Base):
     __tablename__ = "jobs"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, nullable=False)
     playlist_url = Column(String, nullable=False)
     status = Column(String, default="queued")
     filename = Column(String, nullable=True)
@@ -41,9 +47,9 @@ class User(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     email = Column(String, unique=True, nullable=False)
+    name = Column(String, nullable=False, default="")
     password_hash = Column(String, nullable=False)
     is_active = Column(Boolean, default=True)
-    stripe_subscription_id = Column(String, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
 def init_db():

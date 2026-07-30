@@ -9,8 +9,9 @@ import ParticleBackground from '@/components/ParticleBackground';
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 axios.defaults.withCredentials = true;
 
-export default function LoginPage() {
+export default function SignupPage() {
   const router = useRouter();
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -21,10 +22,10 @@ export default function LoginPage() {
     setLoading(true);
     setError('');
     try {
-      await axios.post(`${API_URL}/api/auth/login`, { email, password });
+      await axios.post(`${API_URL}/api/auth/register`, { email, name, password });
       router.push('/dashboard');
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Login gagal');
+      setError(err.response?.data?.detail || 'Registrasi gagal');
     } finally {
       setLoading(false);
     }
@@ -48,6 +49,17 @@ export default function LoginPage() {
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
+                <label className="block text-sm font-medium text-zinc-300">Nama</label>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                  className="w-full mt-1 px-4 py-2 bg-zinc-800 border border-zinc-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-500 text-white"
+                  placeholder="Nama kamu"
+                />
+              </div>
+              <div>
                 <label className="block text-sm font-medium text-zinc-300">Email</label>
                 <input
                   type="email"
@@ -65,8 +77,9 @@ export default function LoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
+                  minLength={8}
                   className="w-full mt-1 px-4 py-2 bg-zinc-800 border border-zinc-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-500 text-white"
-                  placeholder="••••••••"
+                  placeholder="Min. 8 karakter"
                 />
               </div>
               <button
@@ -74,14 +87,14 @@ export default function LoginPage() {
                 disabled={loading}
                 className="w-full py-2.5 bg-white text-black font-semibold rounded-lg hover:bg-zinc-200 disabled:opacity-50"
               >
-                {loading ? 'Loading...' : 'Masuk'}
+                {loading ? 'Loading...' : 'Daftar'}
               </button>
             </form>
 
             <p className="text-center text-sm text-zinc-500">
-              Belum punya akun?{' '}
-              <Link href="/signup" className="text-white hover:underline">
-                Daftar
+              Sudah punya akun?{' '}
+              <Link href="/login" className="text-white hover:underline">
+                Masuk
               </Link>
             </p>
           </div>

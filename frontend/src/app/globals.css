@@ -1,8 +1,76 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
 body {
-  background-color: #0a0a0a;
+  background-color: #18181b; /* zinc-900 */
   color: #e5e5e5;
+}
+
+@keyframes pulse-slow {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.85; }
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 4s ease-in-out infinite;
+}
+
+/* Dark Neomorphism Utilities */
+@layer utilities {
+  .neo-flat {
+    background: #18181b;
+    box-shadow: 6px 6px 12px #0f0f11, -6px -6px 12px #212125;
+  }
+  
+  .neo-flat-hover:hover {
+    box-shadow: 8px 8px 16px #0f0f11, -8px -8px 16px #212125;
+  }
+
+  .neo-pressed {
+    background: #18181b;
+    box-shadow: inset 4px 4px 8px #0f0f11, inset -4px -4px 8px #212125;
+  }
+  
+  .neo-button {
+    background: #18181b;
+    box-shadow: 4px 4px 8px #0f0f11, -4px -4px 8px #212125;
+    transition: all 0.2s ease-in-out;
+    cursor: pointer;
+  }
+  
+  .neo-button:active {
+    box-shadow: inset 3px 3px 6px #0f0f11, inset -3px -3px 6px #212125;
+  }
+
+  .neo-button:focus-visible {
+    outline: none;
+    box-shadow: 4px 4px 8px #0f0f11, -4px -4px 8px #212125, 0 0 0 2px #52525b;
+  }
+
+  .neo-button-primary {
+    background: linear-gradient(145deg, #27272a, #1f1f22);
+    box-shadow: 4px 4px 8px #0f0f11, -4px -4px 8px #212125;
+    transition: all 0.2s ease-in-out;
+    cursor: pointer;
+  }
+  
+  .neo-button-primary:active {
+    background: #18181b;
+    box-shadow: inset 3px 3px 6px #0f0f11, inset -3px -3px 6px #212125;
+  }
+
+  .neo-button-primary:focus-visible {
+    outline: none;
+    box-shadow: 4px 4px 8px #0f0f11, -4px -4px 8px #212125, 0 0 0 2px #52525b;
+  }
+
+  .neo-input {
+    background: #18181b;
+    box-shadow: inset 3px 3px 6px #0f0f11, inset -3px -3px 6px #212125;
+    border: none;
+    outline: none;
+  }
+  
+  .neo-input:focus {
+    box-shadow: inset 4px 4px 8px #0f0f11, inset -4px -4px 8px #212125, 0 0 0 1px #3f3f46;
+  }
 }
