@@ -13,8 +13,7 @@ services:
 
   backend:
     build: ./backend
-    ports:
-      - "8000:8000"
+    ports: []
     env_file:
       - .env.production
     volumes:
