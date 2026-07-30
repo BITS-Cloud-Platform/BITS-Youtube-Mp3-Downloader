@@ -149,9 +149,9 @@ export default function AdminUsers() {
       <AdminNavbar />
 
       <div className="flex-1">
-        <div className="max-w-7xl mx-auto px-6 py-8">
+        <div className="max-w-7xl mx-auto px-6 py-6">
         {/* Page Header */}
-        <div className="mb-8">
+        <div className="mb-6">
           <h1 className="text-3xl font-bold">Users</h1>
           <p className="text-gray-400 mt-2">Manage user accounts and permissions</p>
         </div>
@@ -161,12 +161,12 @@ export default function AdminUsers() {
           {users.map((user) => (
             <div
               key={user.id}
-              className="bg-gray-900/50 border border-gray-800 rounded-lg p-6 hover:border-gray-700 transition"
+              className="bg-gray-900/50 border border-gray-800 rounded-lg p-4 hover:border-gray-700 transition"
             >
               {/* User Info */}
-              <div className="flex items-start justify-between mb-4">
+              <div className="flex items-start justify-between mb-3">
                 <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-white mb-1">{user.name}</h3>
+                  <h3 className="text-base font-semibold text-white mb-1">{user.name}</h3>
                   <p className="text-sm text-gray-400">{user.email}</p>
                   <p className="text-xs text-gray-500 mt-1">
                     Joined: {new Date(user.created_at).toLocaleDateString()}
@@ -175,7 +175,7 @@ export default function AdminUsers() {
               </div>
 
               {/* Stats */}
-              <div className="grid grid-cols-2 gap-3 mb-4">
+              <div className="grid grid-cols-2 gap-3 mb-3">
                 <div className="bg-black/40 rounded-lg p-3 border border-gray-800">
                   <div className="text-xs text-gray-400 uppercase tracking-wide mb-1">Jobs</div>
                   <div className="text-lg font-bold">{user.stats.total_jobs}</div>
@@ -189,7 +189,7 @@ export default function AdminUsers() {
               </div>
 
               {/* Status & Role Badges */}
-              <div className="flex items-center gap-2 mb-4">
+              <div className="flex items-center gap-2 mb-3">
                 <button
                   onClick={() => toggleUserActive(user.id, user.is_active)}
                   className={`px-3 py-1 text-xs rounded-full font-medium transition cursor-pointer ${
@@ -213,7 +213,7 @@ export default function AdminUsers() {
               </div>
 
               {/* Actions */}
-              <div className="flex items-center gap-2 pt-4 border-t border-gray-800">
+              <div className="flex items-center gap-2 pt-3 border-t border-gray-800">
                 <button
                   onClick={() => router.push(`/admin/users/${user.id}`)}
                   className="flex-1 px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition text-sm font-medium cursor-pointer"
