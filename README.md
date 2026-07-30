@@ -1,80 +1,131 @@
-# BITS YouTube Downloader
+# YTMp3.in
 
-Bulk YouTube playlist/podcast downloader → m4a (AAC audio) + cookies auth for unlisted/private videos.
+Bulk YouTube audio downloader — m4a (AAC) output, per-user cookies auth, dark neomorphic UI. Mendukung single video dan playlist penuh, dengan resume, retry per-item, dan progress bar.
 
 ## Stack
 
 | Layer | Tech |
 |-------|------|
-| Frontend | Next.js 14 + Tailwind CSS (Docker) |
+| Frontend | Next.js 16 + Tailwind CSS v4 + Lucide icons |
 | Backend  | FastAPI + yt-dlp |
 | Queue    | Celery + Redis |
-| Database | SQLite (via SQLAlchemy + aiosqlite) |
-| Auth     | JWT (HS256) + bcrypt |
-| Storage  | Docker volume (persisted files + cookies) |
+| Database | SQLite (via SQLAlchemy) |
+| Auth     | JWT (HS256) + bcrypt, httpOnly cookies |
+| Storage  | File system (per-user folders) |
 
-## Quick Start
+## Fitur
+
+- Register/login email dengan httpOnly JWT cookies
+- Download single video atau playlist YouTube → m4a (AAC)
+- Progress bar real-time di dashboard
+- Per-item download: setiap file bisa didownload begitu selesai
+- Resume otomatis: file yang sudah terdownload dilewati saat diulang
+- Retry per-item untuk video yang gagal
+- Cookies auth (upload `cookies.txt`) untuk akses video unlisted/private
+- Dark neomorphic UI
+
+## Development Mode
+
+### Prasyarat
+
+- Python >= 3.12
+- Node.js >= 22
+- Redis (dijalankan secara lokal atau via Docker)
+
+### Setup Backend
 
 ```bash
-cd yt-downloader
-docker compose up --build
+cd backend
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
 ```
 
-| Service | URL |
-|---------|-----|
-| Frontend | http://localhost:3000 |
-| Backend API | http://localhost:8000 |
-| Redis | localhost:6379 |
+Jalankan backend:
 
-## Setup Cookies untuk Video Unlisted/Private
+```bash
+cd backend
+source .venv/bin/activate
+uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+```
 
-1. Login ke channel YouTube di browser Chrome
-2. Install ekstensi **Get cookies.txt** (Chrome Web Store)
-3. Buka halaman upload video di YouTube (Studio)
-4. Klik ekstensi → Export cookies ke `cookies.txt`
-5. Buka dashboard → **Cookies** section → upload file `cookies.txt`
-6. yt-dlp kini bisa akses video unlisted/private milik channel
+Jalankan Celery worker:
 
-Cookies disimpan di volume `/app/data/cookies.txt` dan dipakai oleh semua worker.
+```bash
+cd backend
+source .venv/bin/activate
+celery -A tasks worker --loglevel=info --concurrency=2
+```
 
-## Features
+### Setup Frontend
 
-- Email/password auth (register + login)
-- Submit YouTube playlist URLs
-- Async download via Celery worker (m4a audio only)
-- Progress tracking per job
-- Download completed files
-- JWT-based auth on every API call
-- Cookies auth support untuk akses unlisted/private video
+```bash
+cd frontend
+npm install
+npm run dev
+```
 
-## Format
+Frontend berjalan di http://localhost:3000, backend di http://localhost:8000.
 
-App mendownload **m4a (AAC)** audio. AAC lebih unggul dari MP3 di bitrate yang sama tanpa perlu proses transcode FFmpeg.
+## Production Mode
 
-Untuk output MP3, tambahkan `ffmpeg` di Dockerfile backend (sudah tersedia di image) dan ubah env `YTDL_FORMAT=mp3`.
+### Docker Compose (Rekomendasi)
 
-## Cara Pakai
+```bash
+docker compose up --build -d
+```
 
-1. Buka http://localhost:3000
-2. Register akun atau login
-3. (Admin) Upload cookies.txt di halaman Cookies
-4. Paste YouTube playlist URL → klik Download
-5. Tunggu proses → klik Download untuk file yang sudah siap
+### Manual (Production)
 
-## Konfigurasi Environment
+```bash
+# Backend
+cd backend
+source .venv/bin/activate
+uvicorn main:app --host 0.0.0.0 --port 8000
 
-| Variable | Default | Keterangan |
-|----------|---------|------------|
-| `DATABASE_URL` | `sqlite:////app/data/downloads.db` | SQLite path |
-| `REDIS_URL` | `redis://redis:6379/0` | Redis broker |
-| `SECRET_KEY` | `change-me-in-production` | JWT signing key |
-| `YTDL_FORMAT` | `m4a` | Audio format |
-| `COOKIES_PATH` | `/app/data/cookies.txt` | Path cookies file |
-| `STORAGE_DIR` | `/app/storage` | Download path |
+# Celery
+celery -A tasks worker --loglevel=info --concurrency=4
 
-## Notes
+# Frontend
+cd frontend
+npm install
+npm run build
+npm start
+```
 
-- yt-dlp handles audio extraction natively (no separate FFmpeg step needed for m4a)
-- Untuk MP3 output: tambahkan FFmpeg ke Dockerfile (sudah available), ganti `YTDL_FORMAT=mp3`, ganti `COOKIES_PATH` untuk mengaktifkan cookies
-- SQLite cukup untuk skala kecil-menengah; ganti PostgreSQL untuk produksi
-- Docker volumes persist downloads, database, dan cookies across restarts
+### Environment Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `DATABASE_URL` | `sqlite:////app/data/downloads.db` | Path database SQLite |
+| `REDIS_URL` | `redis://localhost:6379/0` | Redis broker URL |
+| `SECRET_KEY` | *(random)* | JWT signing key |
+| `YTDL_FORMAT` | `m4a` | Format audio output |
+| `STORAGE_DIR` | `/app/storage` | Penyimpanan file hasil download |
+| `ALLOWED_ORIGINS` | `http://localhost:3000` | CORS allowed origins |
+| `PASSWORD_MIN_LENGTH` | `8` | Minimal panjang password |
+
+## Setup Cookies
+
+Untuk mengakses video YouTube unlisted/private, Anda perlu upload cookies:
+
+1. Install ekstensi [Get cookies.txt](https://chrome.google.com/webstore/detail/get-cookiestxt/bgaddhkoddajcdgocldbbfleckgcbcid) di Chrome
+2. Kunjungi YouTube.com dan pastikan sudah login
+3. Klik ikon ekstensi → Export → simpan sebagai `cookies.txt`
+4. Buka dashboard YTMp3 → Profile → upload file `cookies.txt`
+
+Cookies disimpan per-user di folder `data/users/{user_id}/cookies.txt`.
+
+## Maps Folder
+
+```
+data/
+├── users/{user_id}/cookies.txt
+└── downloads.db
+
+storage/
+└── {user_id}/{job_id}/
+    ├── 001 - Title Video.m4a
+    ├── 002 - Title Video.m4a
+    └── ...
+```

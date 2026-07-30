@@ -16,3 +16,28 @@ frontend/node_modules/
 frontend/.next/
 .next/
 next-env.d.ts
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Environments
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Celery
+celerybeat-schedule
+celerybeat.pid

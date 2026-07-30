@@ -1,4 +1,5 @@
 import os
+import re
 import shutil
 import uuid
 from dotenv import load_dotenv
@@ -11,7 +12,6 @@ from models import Session, Job, PlaylistItem
 
 STORAGE_DIR = os.environ.get("STORAGE_DIR", "/app/storage")
 YTDL_FORMAT = os.environ.get("YTDL_FORMAT", "m4a")
-COOKIES_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data", "cookies")
 
 os.makedirs(STORAGE_DIR, exist_ok=True)
 
@@ -37,7 +37,7 @@ def download_playlist(self, job_id: int, playlist_url: str):
     if existing_items:
         # We are resuming!
         playlist_items = [(item, item.url) for item in existing_items]
-        # Keep completed_count accurate
+        total_count = job.total_items or len(existing_items)
         completed_count = sum(1 for item in existing_items if item.status == "completed")
         job.completed_items = completed_count
         db.commit()
@@ -143,7 +143,10 @@ def download_playlist(self, job_id: int, playlist_url: str):
             fname = downloaded_files[0]
             src = os.path.join(item_out_dir, fname)
             ext = os.path.splitext(fname)[1].lstrip(".")
-            new_name = f"{uuid.uuid4().hex}.{ext}"
+            safe_title = re.sub(r'[^\w\-_. ]', '', item.title).strip()[:80] or "audio"
+            if total_count > 1:
+                safe_title = f"{completed_count + 1:03d} - {safe_title}"
+            new_name = f"{safe_title}.{ext}"
             dst = os.path.join(out_dir, new_name)
             os.rename(src, dst)
             shutil.rmtree(item_out_dir, ignore_errors=True)

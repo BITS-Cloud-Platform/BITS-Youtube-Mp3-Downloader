@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
-import { DownloadCloud, CheckCircle2, Clock, AlertCircle, FileAudio, LogOut, User as UserIcon } from 'lucide-react';
+import { DownloadCloud, CheckCircle2, Clock, AlertCircle, FileAudio, LogOut, User as UserIcon, RefreshCw } from 'lucide-react';
 
 type PlaylistItem = {
   id: number;
@@ -83,6 +83,11 @@ export default function DashboardPage() {
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Gagal meresume job');
     }
+  };
+
+  const handleRetryItem = async (jobId: number) => {
+    // Resume the whole job — it will skip completed items and retry failed ones
+    await handleResume(jobId);
   };
 
   const handleDownload = async (job: Job) => {
@@ -232,6 +237,14 @@ export default function DashboardPage() {
                           {job.total_items > 0 ? `${job.completed_items}/${job.total_items} items` : ''}
                         </span>
                       </div>
+                      {job.total_items > 0 && job.status !== 'completed' && job.status !== 'failed' && (
+                        <div className="w-full bg-zinc-800 rounded-full h-1.5 mt-2 overflow-hidden">
+                          <div
+                            className="bg-blue-500 h-full rounded-full transition-all duration-500"
+                            style={{ width: `${Math.round((job.completed_items / job.total_items) * 100)}%` }}
+                          />
+                        </div>
+                      )}
                       <p className="text-sm font-medium text-white truncate w-full" title={job.playlist_url}>
                         {job.playlist_url}
                       </p>
@@ -290,6 +303,15 @@ export default function DashboardPage() {
                                 className="neo-button px-3 py-1.5 rounded-lg text-xs font-medium text-white hover:text-blue-400 whitespace-nowrap flex-shrink-0"
                               >
                                 Download
+                              </button>
+                            )}
+                            {item.status === 'failed' && (
+                              <button
+                                onClick={() => handleRetryItem(job.id)}
+                                className="neo-button px-3 py-1.5 rounded-lg text-xs font-medium text-yellow-400 hover:text-yellow-300 whitespace-nowrap flex-shrink-0"
+                              >
+                                <RefreshCw className="w-3 h-3 inline-block mr-1" />
+                                Retry
                               </button>
                             )}
                           </div>
