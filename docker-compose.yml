@@ -1,0 +1,60 @@
+version: "3.8"
+
+services:
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+    depends_on:
+      - backend
+
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=sqlite:////app/data/downloads.db
+      - REDIS_URL=redis://redis:6379/0
+      - STORAGE_DIR=/app/storage
+      - YTDL_FORMAT=m4a
+      - SECRET_KEY=change-me-in-production
+      - COOKIES_PATH=/app/data/cookies.txt
+    volumes:
+      - app_data:/app/data
+      - app_storage:/app/storage
+      - cookies_volume:/app/data/cookies.txt
+    depends_on:
+      - redis
+
+  worker:
+    build: ./backend
+    command: celery -A tasks worker --loglevel=info --concurrency=2
+    environment:
+      - DATABASE_URL=sqlite:////app/data/downloads.db
+      - REDIS_URL=redis://redis:6379/0
+      - STORAGE_DIR=/app/storage
+      - YTDL_FORMAT=m4a
+      - SECRET_KEY=change-me-in-production
+      - COOKIES_PATH=/app/data/cookies.txt
+    volumes:
+      - app_data:/app/data
+      - app_storage:/app/storage
+      - cookies_volume:/app/data/cookies.txt
+    depends_on:
+      - backend
+      - redis
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+volumes:
+  app_data:
+  app_storage:
+  redis_data:
+  cookies_volume:
