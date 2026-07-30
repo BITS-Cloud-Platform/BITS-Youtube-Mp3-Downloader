@@ -4,26 +4,27 @@ from datetime import datetime
 from models import Session, User, init_db
 
 def create_default_admin():
-    # Skip if disabled via env
-    if os.environ.get("SKIP_DEFAULT_ADMIN", "false").lower() == "true":
-        print("⊘ Skipping default admin creation (SKIP_DEFAULT_ADMIN=true)")
-        return
-    
     db = Session()
     try:
+        # Only create if no admin exists at all
+        admin_count = db.query(User).filter(User.is_admin == True).count()
+        if admin_count > 0:
+            print(f"✓ Admin user already exists (count: {admin_count}), skipping default admin creation")
+            return
+        
+        # Check if default admin email is already taken by non-admin
         admin_email = os.environ.get("DEFAULT_ADMIN_EMAIL", "admin@mail.com")
         admin_password = os.environ.get("DEFAULT_ADMIN_PASSWORD", "admin123")
         
         existing = db.query(User).filter(User.email == admin_email).first()
         if existing:
-            if not existing.is_admin:
-                existing.is_admin = True
-                db.commit()
-                print(f"✓ Upgraded existing user {admin_email} to admin")
-            else:
-                print(f"✓ Default admin {admin_email} already exists")
+            # Upgrade existing user to admin
+            existing.is_admin = True
+            db.commit()
+            print(f"✓ Upgraded existing user {admin_email} to admin")
             return
         
+        # Create new admin
         hashed = bcrypt.hashpw(admin_password.encode(), bcrypt.gensalt())
         admin = User(
             email=admin_email,
