@@ -363,11 +363,22 @@ export default function AdminUsers() {
 
       {/* Edit User Modal */}
       {editModalOpen && editingUser && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-900 border border-gray-800 rounded-lg max-w-md w-full p-6 scale-in">
-            <h3 className="text-xl font-bold text-white mb-4">Edit User</h3>
-            
-            <div className="space-y-4 mb-6">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+            onClick={() => setEditModalOpen(false)}
+          ></div>
+
+          {/* Modal */}
+          <div className="relative bg-gray-900 border border-gray-800 rounded-lg max-w-md w-full shadow-2xl animate-scale-in">
+            {/* Header */}
+            <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-6 rounded-t-lg">
+              <h3 className="text-lg font-semibold text-white">Edit User</h3>
+            </div>
+
+            {/* Body */}
+            <div className="p-6 space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">Name</label>
                 <input
@@ -389,16 +400,17 @@ export default function AdminUsers() {
               </div>
             </div>
 
-            <div className="flex gap-3">
+            {/* Footer */}
+            <div className="flex items-center justify-end gap-3 p-6 border-t border-gray-800">
               <button
                 onClick={() => setEditModalOpen(false)}
-                className="flex-1 px-4 py-2 bg-gray-700 text-white rounded-md hover:bg-gray-600 transition font-medium cursor-pointer"
+                className="px-4 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-700 transition text-sm font-medium cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 onClick={handleEditUser}
-                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition font-medium cursor-pointer"
+                className="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-md hover:opacity-90 transition text-sm font-medium cursor-pointer"
               >
                 Save Changes
               </button>
