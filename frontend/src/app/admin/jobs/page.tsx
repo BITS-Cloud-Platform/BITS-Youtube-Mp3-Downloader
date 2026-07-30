@@ -176,29 +176,31 @@ export default function AdminJobs() {
         </div>
 
         {/* Filter */}
-        <div className="mb-6 bg-gray-900/50 border border-gray-800 rounded-lg p-4">
-          <div className="flex items-center gap-3">
-            <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="mb-6">
+          <div className="flex items-center gap-3 bg-gray-900/50 border border-gray-800 rounded-lg p-4 hover:border-gray-700 transition">
+            <svg className="w-5 h-5 text-blue-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
             </svg>
-            <label className="text-sm font-medium text-gray-300">
-              Filter by status:
-            </label>
-            <select
-              value={statusFilter}
-              onChange={(e) => {
-                setStatusFilter(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="px-4 py-2 bg-black border border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white text-sm cursor-pointer"
-            >
-              <option value="all">All Status</option>
-              <option value="completed">Completed</option>
-              <option value="failed">Failed</option>
-              <option value="downloading">Downloading</option>
-              <option value="queued">Queued</option>
-              <option value="partial">Partial</option>
-            </select>
+            <div className="relative flex-1">
+              <select
+                value={statusFilter}
+                onChange={(e) => {
+                  setStatusFilter(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="w-full px-4 py-2 bg-black/60 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-white text-sm cursor-pointer appearance-none pr-10 hover:bg-black/80 transition"
+              >
+                <option value="all">All Status</option>
+                <option value="completed">Completed</option>
+                <option value="failed">Failed</option>
+                <option value="downloading">Downloading</option>
+                <option value="queued">Queued</option>
+                <option value="partial">Partial</option>
+              </select>
+              <svg className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </div>
           </div>
         </div>
 
