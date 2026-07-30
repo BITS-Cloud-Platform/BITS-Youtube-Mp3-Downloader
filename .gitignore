@@ -41,3 +41,10 @@ Thumbs.db
 # Celery
 celerybeat-schedule
 celerybeat.pid
+
+# ffmpeg binaries
+backend/ffmpeg
+backend/ffprobe
+
+# TypeScript build info
+*.tsbuildinfo

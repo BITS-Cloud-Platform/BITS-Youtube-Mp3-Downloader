@@ -22,7 +22,8 @@ export default function SignupPage() {
     setLoading(true);
     setError('');
     try {
-      await axios.post(`${API_URL}/api/auth/register`, { email, name, password });
+      const res = await axios.post(`${API_URL}/api/auth/register`, { email, name, password });
+      sessionStorage.setItem('access_token', res.data.access_token);
       router.push('/dashboard');
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Registrasi gagal');

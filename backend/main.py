@@ -1,5 +1,8 @@
 import os
+import re
 import time
+import subprocess
+import shutil
 import logging
 from contextlib import asynccontextmanager
 from dotenv import load_dotenv
@@ -150,6 +153,8 @@ async def get_current_user(
     if not token:
         token = request.cookies.get("access_token")
     if not token:
+        token = request.query_params.get("token")
+    if not token:
         raise HTTPException(status_code=401, detail="Not authenticated")
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
@@ -185,7 +190,7 @@ def register(request: RegisterRequest, response: Response, db: Session = Depends
     refresh_token = create_refresh_token({"sub": user.email})
     set_auth_cookies(response, access_token, refresh_token)
     logger.info("User registered: %s (%s)", user.email, user.name)
-    return {"message": "Registered", "email": user.email, "name": user.name}
+    return {"message": "Registered", "email": user.email, "name": user.name, "access_token": access_token}
 
 
 @app.post("/api/auth/login")
@@ -199,7 +204,7 @@ def login(request: LoginRequest, response: Response, db: Session = Depends(get_d
     refresh_token = create_refresh_token({"sub": user.email})
     set_auth_cookies(response, access_token, refresh_token)
     logger.info("User logged in: %s", user.email)
-    return {"message": "Logged in", "email": user.email}
+    return {"message": "Logged in", "email": user.email, "access_token": access_token}
 
 
 @app.post("/api/auth/refresh")
@@ -295,16 +300,27 @@ def list_jobs(user: User = Depends(get_current_user), db: Session = Depends(get_
     res = []
     for j in jobs:
         items = db.query(PlaylistItem).filter(PlaylistItem.job_id == j.id).all()
+        item_statuses = [item.status for item in items]
+        derived_status = j.status
+        if j.status == "completed" and item_statuses:
+            failed = any(s == "failed" for s in item_statuses)
+            completed = any(s == "completed" for s in item_statuses)
+            if failed and completed:
+                derived_status = "partial"
+            elif failed and not completed:
+                derived_status = "failed"
         res.append({
             "id": j.id,
             "playlist_url": j.playlist_url,
-            "status": j.status,
+            "playlist_name": j.playlist_name,
+            "status": derived_status,
             "filename": j.filename,
             "file_size": j.file_size,
             "total_items": j.total_items,
             "completed_items": j.completed_items,
             "error": j.error,
             "format": j.format,
+            "progress": j.progress,
             "created_at": j.created_at.isoformat() if j.created_at else None,
             "completed_at": j.completed_at.isoformat() if j.completed_at else None,
             "items": [
@@ -351,22 +367,49 @@ def resume_job(job_id: int, user: User = Depends(get_current_user), db: Session 
     return {"message": "Job resumed", "id": job.id}
 
 
+@app.post("/api/jobs/{job_id}/cancel")
+def cancel_job(job_id: int, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    job = db.query(Job).filter(Job.id == job_id, Job.user_id == user.id).first()
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    if job.status not in ("queued", "downloading"):
+        raise HTTPException(status_code=400, detail="Job tidak sedang berjalan")
+
+    job.status = "cancelled"
+    job.error = "Dibatalkan oleh pengguna"
+    db.query(PlaylistItem).filter(PlaylistItem.job_id == job.id, PlaylistItem.status == "downloading").update({"status": "queued"})
+    db.commit()
+    logger.info("Job cancelled by %s: %s", user.email, job.playlist_url)
+    return {"message": "Job cancelled", "id": job.id}
+
+
 @app.get("/api/jobs/{job_id}")
 def get_job(job_id: int, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     job = db.query(Job).filter(Job.id == job_id, Job.user_id == user.id).first()
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")
     items = db.query(PlaylistItem).filter(PlaylistItem.job_id == job.id).all()
+    item_statuses = [item.status for item in items]
+    derived_status = job.status
+    if job.status == "completed" and item_statuses:
+        failed = any(s == "failed" for s in item_statuses)
+        completed = any(s == "completed" for s in item_statuses)
+        if failed and completed:
+            derived_status = "partial"
+        elif failed and not completed:
+            derived_status = "failed"
     return {
         "id": job.id,
         "playlist_url": job.playlist_url,
-        "status": job.status,
+        "playlist_name": job.playlist_name,
+        "status": derived_status,
         "filename": job.filename,
         "file_size": job.file_size,
         "total_items": job.total_items,
         "completed_items": job.completed_items,
         "error": job.error,
         "format": job.format,
+        "progress": job.progress,
         "created_at": job.created_at.isoformat() if job.created_at else None,
         "completed_at": job.completed_at.isoformat() if job.completed_at else None,
         "items": [
@@ -402,8 +445,44 @@ def download_file(
         raise HTTPException(status_code=404, detail="File not found")
     return StreamingResponse(
         open(job.file_path, "rb"),
-        media_type="audio/mpeg",
+        media_type="audio/mp4",
         headers={"Content-Disposition": f'attachment; filename="{job.filename}"'},
+    )
+
+
+@app.get("/api/download/{job_id}/mp3")
+def download_file_mp3(
+    job_id: int,
+    token: Optional[str] = None,
+    user: Optional[User] = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    job = db.query(Job).filter(Job.id == job_id, Job.user_id == user.id).first()
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    if job.status != "completed":
+        raise HTTPException(status_code=400, detail="Job not completed")
+    if not job.file_path or not os.path.exists(job.file_path):
+        raise HTTPException(status_code=404, detail="File not found")
+    mp3_filename = os.path.splitext(job.filename or "audio")[0] + ".mp3"
+    ffmpeg_path = os.path.join(os.path.dirname(__file__), "ffmpeg")
+    def iter_mp3():
+        proc = subprocess.Popen(
+            [ffmpeg_path, "-i", job.file_path, "-b:a", "64k", "-f", "mp3", "-y", "pipe:1"],
+            stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+        )
+        while True:
+            chunk = proc.stdout.read(65536)
+            if not chunk:
+                break
+            yield chunk
+        proc.wait()
+    return StreamingResponse(
+        iter_mp3(),
+        media_type="audio/mpeg",
+        headers={"Content-Disposition": f'attachment; filename="{mp3_filename}"'},
     )
 
 
@@ -426,11 +505,74 @@ def download_playlist_item(
     if not item.file_path or not os.path.exists(item.file_path):
         raise HTTPException(status_code=404, detail="File not found")
     ext = os.path.splitext(item.file_path)[1].lstrip(".")
-    import re
     safe_title = re.sub(r'[^\w\-_.]', '_', item.title)
     filename = f"{safe_title}.{ext}"
     return StreamingResponse(
         open(item.file_path, "rb"),
-        media_type="audio/mpeg",
+        media_type="audio/mp4",
         headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )
+
+
+@app.get("/api/download/item/{item_id}/mp3")
+def download_playlist_item_mp3(
+    item_id: int,
+    token: Optional[str] = None,
+    user: Optional[User] = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    item = db.query(PlaylistItem).filter(PlaylistItem.id == item_id).first()
+    if not item:
+        raise HTTPException(status_code=404, detail="Item not found")
+    job = db.query(Job).filter(Job.id == item.job_id, Job.user_id == user.id).first()
+    if not job:
+        raise HTTPException(status_code=403, detail="Access denied")
+    if item.status != "completed":
+        raise HTTPException(status_code=400, detail="Item not completed")
+    if not item.file_path or not os.path.exists(item.file_path):
+        raise HTTPException(status_code=404, detail="File not found")
+    safe_title = re.sub(r'[^\w\-_.]', '_', item.title)
+    mp3_filename = f"{safe_title}.mp3"
+    ffmpeg_path = os.path.join(os.path.dirname(__file__), "ffmpeg")
+    def iter_mp3():
+        proc = subprocess.Popen(
+            [ffmpeg_path, "-i", item.file_path, "-b:a", "64k", "-f", "mp3", "-y", "pipe:1"],
+            stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+        )
+        while True:
+            chunk = proc.stdout.read(65536)
+            if not chunk:
+                break
+            yield chunk
+        proc.wait()
+    return StreamingResponse(
+        iter_mp3(),
+        media_type="audio/mpeg",
+        headers={"Content-Disposition": f'attachment; filename="{mp3_filename}"'},
+    )
+
+
+@app.delete("/api/jobs/{job_id}")
+def delete_job(
+    job_id: int,
+    token: Optional[str] = None,
+    user: Optional[User] = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    job = db.query(Job).filter(Job.id == job_id, Job.user_id == user.id).first()
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    # Delete files
+    storage_dir = os.environ.get("STORAGE_DIR", "/app/storage")
+    job_dir = os.path.join(storage_dir, str(user.id), str(job_id))
+    if os.path.exists(job_dir):
+        shutil.rmtree(job_dir, ignore_errors=True)
+    # Delete DB entries
+    db.query(PlaylistItem).filter(PlaylistItem.job_id == job.id).delete()
+    db.delete(job)
+    db.commit()
+    return {"message": "Job deleted"}

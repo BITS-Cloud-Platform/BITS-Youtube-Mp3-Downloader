@@ -31,6 +31,7 @@ class Job(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     user_id = Column(Integer, nullable=False)
     playlist_url = Column(String, nullable=False)
+    playlist_name = Column(String, nullable=True)
     status = Column(String, default="queued")
     filename = Column(String, nullable=True)
     file_path = Column(String, nullable=True)
@@ -41,6 +42,7 @@ class Job(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     completed_at = Column(DateTime, nullable=True)
     format = Column(String, default="m4a")
+    progress = Column(String, nullable=True)
 
 class PlaylistItem(Base):
     __tablename__ = "playlist_items"
