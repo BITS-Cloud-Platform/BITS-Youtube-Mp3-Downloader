@@ -227,27 +227,57 @@ export default function UserDetailPage() {
                 <div className="max-h-96 overflow-y-auto space-y-2 pr-2">
                   {user.jobs.map((job) => (
                     <div key={job.id} className="flex items-center justify-between gap-3 p-3 bg-black/40 border border-gray-800 rounded-lg hover:border-gray-700 transition">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className={`w-2 h-2 rounded-full flex-shrink-0 ${
-                            job.status === 'completed' ? 'bg-green-500' :
-                            job.status === 'failed' ? 'bg-red-500' :
-                            job.status === 'downloading' ? 'bg-blue-500' :
-                            'bg-yellow-500'
-                          }`}></span>
-                          <h3 className="text-sm font-medium text-white truncate" title={job.playlist_name || "Unknown Playlist"}>
-                            {job.playlist_name || "Unknown Playlist"}
-                          </h3>
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                          job.status === 'completed' ? 'bg-green-500/10' :
+                          job.status === 'failed' ? 'bg-red-500/10' :
+                          job.status === 'downloading' ? 'bg-blue-500/10' :
+                          'bg-yellow-500/10'
+                        }`}>
+                          <svg className={`w-4 h-4 ${
+                            job.status === 'completed' ? 'text-green-400' :
+                            job.status === 'failed' ? 'text-red-400' :
+                            job.status === 'downloading' ? 'text-blue-400' :
+                            'text-yellow-400'
+                          }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            {job.status === 'completed' ? (
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            ) : job.status === 'failed' ? (
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            ) : job.status === 'downloading' ? (
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                            ) : (
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            )}
+                          </svg>
                         </div>
-                        <div className="flex items-center gap-3 text-xs text-gray-400">
-                          <span>#{job.id}</span>
+                        <h3 className="text-sm font-medium text-white truncate capitalize" title={job.playlist_name || "Unknown Playlist"}>
+                          {job.playlist_name || "Unknown Playlist"}
+                        </h3>
+                        <div className="flex items-center gap-2 text-xs text-gray-400">
+                          <span className="flex items-center gap-1">
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" />
+                            </svg>
+                            {job.id}
+                          </span>
                           <span>•</span>
-                          <span>{formatBytes(job.file_size)}</span>
+                          <span className="flex items-center gap-1">
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
+                            </svg>
+                            {formatBytes(job.file_size)}
+                          </span>
                           <span>•</span>
-                          <span>{new Date(job.created_at).toLocaleDateString()}</span>
+                          <span className="flex items-center gap-1">
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                            {new Date(job.created_at).toLocaleDateString()}
+                          </span>
                         </div>
                       </div>
-                      <span className={`px-2 py-1 text-xs rounded-full font-medium flex-shrink-0 ${getStatusColor(job.status)}`}>
+                      <span className={`px-3 py-1 text-xs rounded-full font-medium flex-shrink-0 capitalize ${getStatusColor(job.status)}`}>
                         {job.status}
                       </span>
                     </div>
