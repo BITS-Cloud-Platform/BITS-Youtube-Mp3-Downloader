@@ -219,9 +219,9 @@ export default function AdminJobs() {
                     {/* Job Info */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
-                        <h3 className="text-base font-semibold text-white truncate">{job.playlist_name || "Unknown Playlist"}</h3>
+                        <h3 className="text-base font-semibold text-white truncate capitalize">{job.playlist_name || "Unknown Playlist"}</h3>
                         <span
-                          className={`px-2 py-0.5 text-xs rounded-full font-medium transition cursor-pointer ${getStatusColor(
+                          className={`px-2 py-0.5 text-xs rounded-full font-medium transition cursor-pointer capitalize ${getStatusColor(
                             job.status
                           )}`}
                         >
@@ -229,19 +229,37 @@ export default function AdminJobs() {
                         </span>
                       </div>
                       <div className="flex items-center gap-4 text-xs text-gray-400">
-                        <span className="truncate">{job.user_email}</span>
+                        <span className="flex items-center gap-1 truncate">
+                          <svg className="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                          </svg>
+                          {job.user_email}
+                        </span>
                         <span className="text-gray-600">•</span>
-                        <span>#{job.id}</span>
+                        <span className="flex items-center gap-1">
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
+                          </svg>
+                          {formatBytes(job.file_size)}
+                        </span>
                         <span className="text-gray-600">•</span>
-                        <span>{formatBytes(job.file_size)}</span>
+                        <span className="flex items-center gap-1">
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                          {new Date(job.created_at).toLocaleDateString()}
+                        </span>
                       </div>
                     </div>
 
                     {/* Progress */}
                     <div className="hidden lg:flex items-center gap-3 text-sm">
-                      <div className="text-center">
-                        <div className="text-white font-semibold">{job.completed_items}/{job.total_items}</div>
-                        <div className="text-xs text-gray-400">Items</div>
+                      <div className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-500/5 rounded-lg border border-blue-500/10">
+                        <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        <span className="text-white font-medium">{job.completed_items}/{job.total_items}</span>
+                        <span className="text-gray-400">Items</span>
                       </div>
                       <div className="w-24">
                         <div className="w-full bg-gray-800 rounded-full h-2">
