@@ -1,33 +1,21 @@
 <div align="center">
-  <img src="https://ytmp3.bits.co.id/favicon.ico" alt="YTMp3" width="80" />
-  <h1 align="center">YTMp3.in</h1>
-  <p align="center">
-    <strong>YouTube Audio Downloader</strong>
-    <br />
-    Download, Convert, Enjoy — Free & Fast YouTube to MP3/M4A Converter
-    <br />
-    <br />
-    <a href="https://ytmp3.bits.co.id"><strong>ytmp3.bits.co.id »</strong></a>
-    <br />
-    <br />
-    <a href="#features">Features</a>
-    ·
-    <a href="#tech-stack">Tech Stack</a>
-    ·
-    <a href="#quick-start-docker">Quick Start</a>
-    ·
-    <a href="#development">Development</a>
-    ·
-    <a href="#admin-panel">Admin Panel</a>
-    ·
-    <a href="#api-endpoints">API</a>
+  <h1>YTMp3.in</h1>
+  <p><strong>YouTube Audio Downloader</strong></p>
+  <p>
+    <a href="https://ytmp3.bits.co.id" target="_blank">ytmp3.bits.co.id</a> ·
+    <a href="https://bits.co.id" target="_blank">Banten IT Solutions</a>
   </p>
+  <p>
+    Download, Convert, Enjoy — Free & Fast YouTube to MP3/M4A Converter
+  </p>
+  <br>
   <p>
     <img src="https://img.shields.io/badge/Next.js-15-black?style=flat&logo=next.js" alt="Next.js 15" />
     <img src="https://img.shields.io/badge/Python-3.12-blue?style=flat&logo=python" alt="Python 3.12" />
     <img src="https://img.shields.io/badge/FastAPI-0.115-009688?style=flat&logo=fastapi" alt="FastAPI" />
     <img src="https://img.shields.io/badge/Docker-Compose-2496ED?style=flat&logo=docker" alt="Docker Compose" />
     <img src="https://img.shields.io/badge/license-MIT-green?style=flat" alt="MIT License" />
+    <img src="https://img.shields.io/badge/status-live-success" alt="Status Live" />
   </p>
 </div>
 
@@ -150,8 +138,8 @@ The fastest way to deploy the project in production:
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/yourusername/ytmp3.git
-cd ytmp3
+git clone https://github.com/BITS-Cloud-Platform/ytmp3.bits.co.id.git
+cd ytmp3.bits.co.id
 
 # 2. Copy the production environment template
 cp .env.example .env.production
@@ -164,7 +152,6 @@ nano .env.production
 **Generate a secure SECRET_KEY:**
 ```bash
 openssl rand -hex 32
-# Example output: 4fae51d20439cbc34e2eebeb97931a3a9a48fb4e52049427f4aabd7a6d5a0386
 ```
 
 **.env.production reference:**
@@ -215,8 +202,8 @@ docker compose up -d
 ### 1. Clone & Setup Environment
 
 ```bash
-git clone https://github.com/yourusername/ytmp3.git
-cd ytmp3
+git clone https://github.com/BITS-Cloud-Platform/ytmp3.bits.co.id.git
+cd ytmp3.bits.co.id
 
 # Backend environment
 cp .env.example backend/.env
@@ -278,7 +265,7 @@ celery -A tasks worker --loglevel=info --concurrency=2
 **Terminal 3 — Backend:**
 ```bash
 cd backend
-source .venp/bin/activate
+source .venv/bin/activate
 export PATH="$HOME/.deno/bin:$PATH"
 uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 ```
@@ -505,46 +492,19 @@ Distributed under the MIT License. See `LICENSE` for more information.
 
 ---
 
-## 🤝 Credits
-
 <div align="center">
-  <br />
-  <table>
-    <tr>
-      <td align="center">
-        <strong>Developed & Maintained by</strong>
-        <br />
-        <br />
-        <a href="https://bits.co.id">
-          <img src="https://bits.co.id/assets/img/logo.png" alt="Banten IT Solutions" height="60" />
-        </a>
-        <br />
-        <br />
-        <a href="https://bits.co.id"><strong>Banten IT Solutions</strong></a>
-        <br />
-        <a href="https://bits.co.id">https://bits.co.id</a>
-        <br />
-        <br />
-        <em>Professional IT Solutions &amp; Digital Services</em>
-        <br />
-        <br />
-        <a href="mailto:contact@bits.co.id">contact@bits.co.id</a>
-      </td>
-    </tr>
-  </table>
-  <br />
   <p>
-    <sub>Built with passion by the team at <strong>Banten IT Solutions</strong></sub>
+    <strong>YTMp3.in</strong> ·
+    <a href="https://ytmp3.bits.co.id">ytmp3.bits.co.id</a> ·
+    <a href="https://bits.co.id">bits.co.id</a>
   </p>
-  <br />
-</div>
-
----
-
-<div align="center">
   <p>
-    <a href="https://ytmp3.bits.co.id"><strong>ytmp3.bits.co.id</strong></a>
-    <br />
-    <sub>&copy; 2024 Banten IT Solutions. All rights reserved.</sub>
+    Made with ❤️ by <a href="https://bits.co.id"><strong>Banten IT Solutions</strong></a>
+  </p>
+  <br>
+  <p>
+    <img src="https://img.shields.io/badge/status-live-success" alt="Status">
+    <img src="https://img.shields.io/badge/version-1.0.0-blue" alt="Version">
+    <img src="https://img.shields.io/badge/docker-ready-2496ED?logo=docker" alt="Docker">
   </p>
 </div>
