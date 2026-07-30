@@ -450,6 +450,77 @@ def download_file(
     )
 
 
+@app.get("/api/download/{job_id}/{format}")
+def download_file_format(
+    job_id: int,
+    format: str,
+    token: Optional[str] = None,
+    user: Optional[User] = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    # Validate format
+    format_config = {
+        "mp3": {"ext": "mp3", "codec": "libmp3lame", "bitrate": "64k", "mime": "audio/mpeg"},
+        "m4a": {"ext": "m4a", "codec": "aac", "bitrate": "128k", "mime": "audio/mp4"},
+        "opus": {"ext": "opus", "codec": "libopus", "bitrate": "64k", "mime": "audio/ogg"},
+        "ogg": {"ext": "ogg", "codec": "libvorbis", "bitrate": "128k", "mime": "audio/ogg"},
+        "flac": {"ext": "flac", "codec": "flac", "bitrate": None, "mime": "audio/flac"},
+        "wav": {"ext": "wav", "codec": "pcm_s16le", "bitrate": None, "mime": "audio/wav"},
+    }
+    
+    if format not in format_config:
+        raise HTTPException(status_code=400, detail="Format not supported")
+    
+    job = db.query(Job).filter(Job.id == job_id, Job.user_id == user.id).first()
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    if job.status != "completed":
+        raise HTTPException(status_code=400, detail="Job not completed")
+    if not job.file_path or not os.path.exists(job.file_path):
+        raise HTTPException(status_code=404, detail="File not found")
+    
+    # Check if source file is already in requested format
+    source_ext = os.path.splitext(job.file_path)[1].lstrip(".")
+    target_filename = os.path.splitext(job.filename or "audio")[0] + f".{format_config[format]['ext']}"
+    
+    # If already in target format, return directly
+    if source_ext == format_config[format]['ext']:
+        return StreamingResponse(
+            open(job.file_path, "rb"),
+            media_type=format_config[format]['mime'],
+            headers={"Content-Disposition": f'attachment; filename="{target_filename}"'},
+        )
+    
+    # Convert using ffmpeg
+    ffmpeg_path = os.path.join(os.path.dirname(__file__), "ffmpeg")
+    cfg = format_config[format]
+    
+    def iter_converted():
+        cmd = [ffmpeg_path, "-i", job.file_path]
+        if cfg['codec']:
+            cmd.extend(["-acodec", cfg['codec']])
+        if cfg['bitrate']:
+            cmd.extend(["-b:a", cfg['bitrate']])
+        cmd.extend(["-f", cfg['ext'], "-y", "pipe:1"])
+        
+        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+        while True:
+            chunk = proc.stdout.read(65536)
+            if not chunk:
+                break
+            yield chunk
+        proc.wait()
+    
+    return StreamingResponse(
+        iter_converted(),
+        media_type=cfg['mime'],
+        headers={"Content-Disposition": f'attachment; filename="{target_filename}"'},
+    )
+
+
 @app.get("/api/download/{job_id}/mp3")
 def download_file_mp3(
     job_id: int,
@@ -511,6 +582,81 @@ def download_playlist_item(
         open(item.file_path, "rb"),
         media_type="audio/mp4",
         headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
+@app.get("/api/download/item/{item_id}/{format}")
+def download_playlist_item_format(
+    item_id: int,
+    format: str,
+    token: Optional[str] = None,
+    user: Optional[User] = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    # Validate format
+    format_config = {
+        "mp3": {"ext": "mp3", "codec": "libmp3lame", "bitrate": "64k", "mime": "audio/mpeg"},
+        "m4a": {"ext": "m4a", "codec": "aac", "bitrate": "128k", "mime": "audio/mp4"},
+        "opus": {"ext": "opus", "codec": "libopus", "bitrate": "64k", "mime": "audio/ogg"},
+        "ogg": {"ext": "ogg", "codec": "libvorbis", "bitrate": "128k", "mime": "audio/ogg"},
+        "flac": {"ext": "flac", "codec": "flac", "bitrate": None, "mime": "audio/flac"},
+        "wav": {"ext": "wav", "codec": "pcm_s16le", "bitrate": None, "mime": "audio/wav"},
+    }
+    
+    if format not in format_config:
+        raise HTTPException(status_code=400, detail="Format not supported")
+    
+    item = db.query(PlaylistItem).filter(PlaylistItem.id == item_id).first()
+    if not item:
+        raise HTTPException(status_code=404, detail="Item not found")
+    job = db.query(Job).filter(Job.id == item.job_id, Job.user_id == user.id).first()
+    if not job:
+        raise HTTPException(status_code=403, detail="Access denied")
+    if item.status != "completed":
+        raise HTTPException(status_code=400, detail="Item not completed")
+    if not item.file_path or not os.path.exists(item.file_path):
+        raise HTTPException(status_code=404, detail="File not found")
+    
+    # Check if source file is already in requested format
+    source_ext = os.path.splitext(item.file_path)[1].lstrip(".")
+    safe_title = re.sub(r'[^\w\-_.]', '_', item.title)
+    target_filename = f"{safe_title}.{format_config[format]['ext']}"
+    
+    # If already in target format, return directly
+    if source_ext == format_config[format]['ext']:
+        return StreamingResponse(
+            open(item.file_path, "rb"),
+            media_type=format_config[format]['mime'],
+            headers={"Content-Disposition": f'attachment; filename="{target_filename}"'},
+        )
+    
+    # Convert using ffmpeg
+    ffmpeg_path = os.path.join(os.path.dirname(__file__), "ffmpeg")
+    cfg = format_config[format]
+    
+    def iter_converted():
+        cmd = [ffmpeg_path, "-i", item.file_path]
+        if cfg['codec']:
+            cmd.extend(["-acodec", cfg['codec']])
+        if cfg['bitrate']:
+            cmd.extend(["-b:a", cfg['bitrate']])
+        cmd.extend(["-f", cfg['ext'], "-y", "pipe:1"])
+        
+        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+        while True:
+            chunk = proc.stdout.read(65536)
+            if not chunk:
+                break
+            yield chunk
+        proc.wait()
+    
+    return StreamingResponse(
+        iter_converted(),
+        media_type=cfg['mime'],
+        headers={"Content-Disposition": f'attachment; filename="{target_filename}"'},
     )
 
 

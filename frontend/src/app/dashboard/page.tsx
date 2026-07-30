@@ -120,6 +120,15 @@ export default function DashboardPage() {
     document.body.removeChild(a);
   };
 
+  const handleDownloadFormat = (job: Job, format: string) => {
+    const a = document.createElement('a');
+    a.href = `${API_URL}/api/download/${job.id}/${format}?token=${token()}`;
+    a.download = (job.filename || 'audio').replace(/\.[^.]+$/, `.${format}`);
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  };
+
   const handleDelete = async (jobId: number) => {
     try {
       await axios.delete(`${API_URL}/api/jobs/${jobId}`);
@@ -129,24 +138,22 @@ export default function DashboardPage() {
     }
   };
 
-  const handleDownloadItemM4a = (item: PlaylistItem) => {
+  const handleDownloadItemFormat = (item: PlaylistItem, format: string) => {
     const safeTitle = item.title.replace(/[^\w\-_.]/g, '_');
     const a = document.createElement('a');
-    a.href = `${API_URL}/api/download/item/${item.id}?token=${token()}`;
-    a.download = `${safeTitle}.m4a`;
+    a.href = `${API_URL}/api/download/item/${item.id}/${format}?token=${token()}`;
+    a.download = `${safeTitle}.${format}`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
   };
 
+  const handleDownloadItemM4a = (item: PlaylistItem) => {
+    handleDownloadItemFormat(item, 'm4a');
+  };
+
   const handleDownloadItemMp3 = (item: PlaylistItem) => {
-    const safeTitle = item.title.replace(/[^\w\-_.]/g, '_');
-    const a = document.createElement('a');
-    a.href = `${API_URL}/api/download/item/${item.id}/mp3?token=${token()}`;
-    a.download = `${safeTitle}.mp3`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+    handleDownloadItemFormat(item, 'mp3');
   };
 
   const formatFileSize = (bytes: number) => {
@@ -279,6 +286,30 @@ export default function DashboardPage() {
                             <span className="text-[9px] font-semibold">mp3</span>
                           </button>
                           <button
+                            onClick={() => handleDownloadFormat(job, 'opus')}
+                            className="h-6 px-1.5 flex items-center gap-0.5 cursor-pointer text-purple-400 transition-colors"
+                            title="Download OPUS"
+                          >
+                            <FileAudio className="w-3 h-3" />
+                            <span className="text-[9px] font-semibold">opus</span>
+                          </button>
+                          <button
+                            onClick={() => handleDownloadFormat(job, 'ogg')}
+                            className="h-6 px-1.5 flex items-center gap-0.5 cursor-pointer text-orange-400 transition-colors"
+                            title="Download OGG"
+                          >
+                            <FileAudio className="w-3 h-3" />
+                            <span className="text-[9px] font-semibold">ogg</span>
+                          </button>
+                          <button
+                            onClick={() => handleDownloadFormat(job, 'flac')}
+                            className="h-6 px-1.5 flex items-center gap-0.5 cursor-pointer text-cyan-400 transition-colors"
+                            title="Download FLAC"
+                          >
+                            <FileAudio className="w-3 h-3" />
+                            <span className="text-[9px] font-semibold">flac</span>
+                          </button>
+                          <button
                             onClick={() => handleDelete(job.id)}
                             className="h-6 px-1.5 flex items-center gap-0.5 cursor-pointer text-red-400 transition-colors"
                             title="Hapus"
@@ -376,7 +407,7 @@ export default function DashboardPage() {
                               {item.status === 'completed' && (
                                 <div className="neo-flat rounded-md flex items-center divide-x divide-zinc-700/30">
                                   <button
-                                    onClick={() => handleDownloadItemM4a(item)}
+                                    onClick={() => handleDownloadItemFormat(item, 'm4a')}
                                     className="h-6 px-1.5 flex items-center gap-0.5 cursor-pointer text-blue-400 transition-colors"
                                     title="Download M4A"
                                   >
@@ -384,12 +415,36 @@ export default function DashboardPage() {
                                     <span className="text-[9px] font-semibold">m4a</span>
                                   </button>
                                   <button
-                                    onClick={() => handleDownloadItemMp3(item)}
+                                    onClick={() => handleDownloadItemFormat(item, 'mp3')}
                                     className="h-6 px-1.5 flex items-center gap-0.5 cursor-pointer text-green-400 transition-colors"
                                     title="Download MP3"
                                   >
                                     <FileAudio className="w-3 h-3" />
                                     <span className="text-[9px] font-semibold">mp3</span>
+                                  </button>
+                                  <button
+                                    onClick={() => handleDownloadItemFormat(item, 'opus')}
+                                    className="h-6 px-1.5 flex items-center gap-0.5 cursor-pointer text-purple-400 transition-colors"
+                                    title="Download OPUS"
+                                  >
+                                    <FileAudio className="w-3 h-3" />
+                                    <span className="text-[9px] font-semibold">opus</span>
+                                  </button>
+                                  <button
+                                    onClick={() => handleDownloadItemFormat(item, 'ogg')}
+                                    className="h-6 px-1.5 flex items-center gap-0.5 cursor-pointer text-orange-400 transition-colors"
+                                    title="Download OGG"
+                                  >
+                                    <FileAudio className="w-3 h-3" />
+                                    <span className="text-[9px] font-semibold">ogg</span>
+                                  </button>
+                                  <button
+                                    onClick={() => handleDownloadItemFormat(item, 'flac')}
+                                    className="h-6 px-1.5 flex items-center gap-0.5 cursor-pointer text-cyan-400 transition-colors"
+                                    title="Download FLAC"
+                                  >
+                                    <FileAudio className="w-3 h-3" />
+                                    <span className="text-[9px] font-semibold">flac</span>
                                   </button>
                                 </div>
                               )}
