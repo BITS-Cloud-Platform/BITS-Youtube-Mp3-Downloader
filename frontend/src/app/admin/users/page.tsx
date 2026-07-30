@@ -46,17 +46,25 @@ export default function AdminUsers() {
   const [editName, setEditName] = useState("");
   const [editEmail, setEditEmail] = useState("");
   const [editPassword, setEditPassword] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalUsers, setTotalUsers] = useState(0);
+  const itemsPerPage = 5;
 
   useEffect(() => {
     fetchUsers();
-  }, []);
+  }, [currentPage]);
 
   const fetchUsers = async () => {
     try {
       const response = await axios.get(`${API_URL}/api/admin/users`, {
+        params: {
+          skip: (currentPage - 1) * itemsPerPage,
+          limit: itemsPerPage,
+        },
         withCredentials: true,
       });
-      setUsers(response.data);
+      setUsers(response.data.users);
+      setTotalUsers(response.data.total);
       setError("");
     } catch (err: any) {
       if (err.response?.status === 403) {
@@ -73,6 +81,8 @@ export default function AdminUsers() {
       setLoading(false);
     }
   };
+
+  const totalPages = Math.ceil(totalUsers / itemsPerPage);
 
   const toggleUserActive = async (userId: number, currentStatus: boolean) => {
     try {
@@ -350,6 +360,46 @@ export default function AdminUsers() {
             </div>
           )}
         </div>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between mt-6">
+            <div className="text-sm text-gray-400">
+              Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, totalUsers)} of {totalUsers} users
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setCurrentPage(currentPage - 1)}
+                disabled={currentPage === 1}
+                className="px-3 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition text-sm font-medium cursor-pointer"
+              >
+                Previous
+              </button>
+              <div className="flex items-center gap-1">
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                  <button
+                    key={page}
+                    onClick={() => setCurrentPage(page)}
+                    className={`px-3 py-2 rounded-md text-sm font-medium transition cursor-pointer ${
+                      currentPage === page
+                        ? "bg-blue-600 text-white"
+                        : "bg-gray-800 text-gray-300 hover:bg-gray-700"
+                    }`}
+                  >
+                    {page}
+                  </button>
+                ))}
+              </div>
+              <button
+                onClick={() => setCurrentPage(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className="px-3 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition text-sm font-medium cursor-pointer"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
         </div>
       </div>
 

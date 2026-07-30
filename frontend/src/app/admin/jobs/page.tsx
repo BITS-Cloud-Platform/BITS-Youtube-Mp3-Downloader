@@ -38,19 +38,29 @@ export default function AdminJobs() {
     onConfirm: () => void;
     type: "danger" | "warning" | "info";
   } | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalJobs, setTotalJobs] = useState(0);
+  const itemsPerPage = 5;
 
   useEffect(() => {
     fetchJobs();
-  }, [statusFilter]);
+  }, [statusFilter, currentPage]);
 
   const fetchJobs = async () => {
     try {
-      const params = statusFilter !== "all" ? { status: statusFilter } : {};
+      const params: any = {
+        skip: (currentPage - 1) * itemsPerPage,
+        limit: itemsPerPage,
+      };
+      if (statusFilter !== "all") {
+        params.status = statusFilter;
+      }
       const response = await axios.get(`${API_URL}/api/admin/jobs`, {
         params,
         withCredentials: true,
       });
-      setJobs(response.data);
+      setJobs(response.data.jobs);
+      setTotalJobs(response.data.total);
       setError("");
     } catch (err: any) {
       if (err.response?.status === 403) {
@@ -67,6 +77,8 @@ export default function AdminJobs() {
       setLoading(false);
     }
   };
+
+  const totalPages = Math.ceil(totalJobs / itemsPerPage);
 
   const formatBytes = (bytes: number) => {
     if (bytes === 0) return "0 B";
@@ -244,6 +256,46 @@ export default function AdminJobs() {
         {jobs.length === 0 && !loading && (
           <div className="text-center py-12 text-gray-500">
             No jobs found
+          </div>
+        )}
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between mt-6">
+            <div className="text-sm text-gray-400">
+              Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, totalJobs)} of {totalJobs} jobs
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setCurrentPage(currentPage - 1)}
+                disabled={currentPage === 1}
+                className="px-3 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition text-sm font-medium cursor-pointer"
+              >
+                Previous
+              </button>
+              <div className="flex items-center gap-1">
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                  <button
+                    key={page}
+                    onClick={() => setCurrentPage(page)}
+                    className={`px-3 py-2 rounded-md text-sm font-medium transition cursor-pointer ${
+                      currentPage === page
+                        ? "bg-blue-600 text-white"
+                        : "bg-gray-800 text-gray-300 hover:bg-gray-700"
+                    }`}
+                  >
+                    {page}
+                  </button>
+                ))}
+              </div>
+              <button
+                onClick={() => setCurrentPage(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className="px-3 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition text-sm font-medium cursor-pointer"
+              >
+                Next
+              </button>
+            </div>
           </div>
         )}
         </div>

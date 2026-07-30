@@ -143,28 +143,31 @@ def get_admin_stats(
 
 @router.get("/users")
 def list_all_users(
+    skip: int = 0,
+    limit: int = 100,
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     if not user.is_admin:
         raise HTTPException(status_code=403, detail="Admin access required")
     
-    users = db.query(User).order_by(desc(User.created_at)).all()
+    total = db.query(func.count(User.id)).scalar()
+    users = db.query(User).order_by(desc(User.created_at)).offset(skip).limit(limit).all()
     result = []
     
-    for user in users:
-        user_stats = get_user_stats(user.id)
+    for user_item in users:
+        user_stats = get_user_stats(user_item.id)
         result.append({
-            "id": user.id,
-            "email": user.email,
-            "name": user.name,
-            "is_active": user.is_active,
-            "is_admin": user.is_admin,
-            "created_at": user.created_at.isoformat() if user.created_at else None,
+            "id": user_item.id,
+            "email": user_item.email,
+            "name": user_item.name,
+            "is_active": user_item.is_active,
+            "is_admin": user_item.is_admin,
+            "created_at": user_item.created_at.isoformat() if user_item.created_at else None,
             "stats": user_stats,
         })
     
-    return result
+    return {"users": result, "total": total}
 
 
 @router.get("/users/{user_id}")
@@ -291,6 +294,7 @@ def delete_user(
 
 @router.get("/jobs")
 def list_all_jobs(
+    skip: int = 0,
     limit: int = 50,
     status: Optional[str] = None,
     user: User = Depends(get_current_user),
@@ -304,7 +308,8 @@ def list_all_jobs(
     if status:
         query = query.filter(Job.status == status)
     
-    jobs = query.limit(limit).all()
+    total = query.count()
+    jobs = query.offset(skip).limit(limit).all()
     
     result = []
     for job in jobs:
@@ -323,7 +328,7 @@ def list_all_jobs(
             "completed_at": job.completed_at.isoformat() if job.completed_at else None,
         })
     
-    return result
+    return {"jobs": result, "total": total}
 
 
 @router.post("/cleanup")
