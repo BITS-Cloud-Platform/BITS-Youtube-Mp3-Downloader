@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Fragment } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 import toast from "react-hot-toast";
@@ -8,6 +8,7 @@ import AdminNavbar from "@/components/AdminNavbar";
 import AdminFooter from "@/components/AdminFooter";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import Modal from "@/components/Modal";
+import { Listbox, Transition } from '@headlessui/react';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -105,6 +106,50 @@ export default function AdminJobs() {
     }
   };
 
+  const cancelJob = async (jobId: number, playlistName: string) => {
+    setModalConfig({
+      title: "Cancel Job",
+      message: `Cancel job "${playlistName}"? The download will be stopped immediately.`,
+      onConfirm: async () => {
+        try {
+          await axios.post(`${API_URL}/api/admin/jobs/${jobId}/cancel`, {}, {
+            withCredentials: true,
+          });
+          toast.success("Job cancelled successfully");
+          fetchJobs();
+        } catch (err: any) {
+          toast.error(err.response?.data?.detail || "Failed to cancel job");
+        } finally {
+          setModalOpen(false);
+        }
+      },
+      type: "warning",
+    });
+    setModalOpen(true);
+  };
+
+  const resumeJob = async (jobId: number, playlistName: string) => {
+    setModalConfig({
+      title: "Resume Job",
+      message: `Resume job "${playlistName}"? The download will restart from where it stopped.`,
+      onConfirm: async () => {
+        try {
+          await axios.post(`${API_URL}/api/admin/jobs/${jobId}/resume`, {}, {
+            withCredentials: true,
+          });
+          toast.success("Job resumed successfully");
+          fetchJobs();
+        } catch (err: any) {
+          toast.error(err.response?.data?.detail || "Failed to resume job");
+        } finally {
+          setModalOpen(false);
+        }
+      },
+      type: "info",
+    });
+    setModalOpen(true);
+  };
+
   const deleteJob = async (jobId: number, playlistName: string) => {
     setModalConfig({
       title: "Delete Job",
@@ -144,6 +189,15 @@ export default function AdminJobs() {
     return email.slice(0, 2).toUpperCase();
   };
 
+  const statusOptions = [
+    { value: 'all', label: 'All Status', emoji: '📋' },
+    { value: 'completed', label: 'Completed', emoji: '✅' },
+    { value: 'failed', label: 'Failed', emoji: '❌' },
+    { value: 'downloading', label: 'Downloading', emoji: '⬇️' },
+    { value: 'queued', label: 'Queued', emoji: '⏱️' },
+    { value: 'partial', label: 'Partial', emoji: '◐' },
+  ];
+
   if (loading) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
@@ -177,32 +231,61 @@ export default function AdminJobs() {
 
         {/* Filter */}
         <div className="mb-6">
-          <div className="relative inline-flex items-center gap-2">
-            <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-            </svg>
-            <div className="relative">
-              <select
-                value={statusFilter}
-                onChange={(e) => {
-                  setStatusFilter(e.target.value);
-                  setCurrentPage(1);
-                }}
-                className="pl-4 pr-10 py-2 bg-gray-900/50 border border-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white text-sm cursor-pointer appearance-none hover:border-gray-700 transition min-w-[180px]"
-              >
-                <option value="all">All Status</option>
-                <option value="completed">✓ Completed</option>
-                <option value="failed">✗ Failed</option>
-                <option value="downloading">↓ Downloading</option>
-                <option value="queued">⏱ Queued</option>
-                <option value="partial">◐ Partial</option>
-              </select>
-              <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
+          <div className="inline-flex items-center gap-2">
+            <Listbox value={statusFilter} onChange={(value) => {
+              setStatusFilter(value);
+              setCurrentPage(1);
+            }}>
+              <div className="relative">
+                <Listbox.Button className="relative w-full min-w-[200px] cursor-pointer rounded-lg bg-gray-900/50 border border-gray-800 py-2 pl-4 pr-10 text-left focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-gray-700 transition">
+                  <span className="flex items-center gap-2 text-sm">
+                    <span>{statusOptions.find(opt => opt.value === statusFilter)?.emoji}</span>
+                    <span>{statusOptions.find(opt => opt.value === statusFilter)?.label}</span>
+                  </span>
+                  <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+                    <svg className="h-4 w-4 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M10 3a1 1 0 01.707.293l3 3a1 1 0 01-1.414 1.414L10 5.414 7.707 7.707a1 1 0 01-1.414-1.414l3-3A1 1 0 0110 3zm-3.707 9.293a1 1 0 011.414 0L10 14.586l2.293-2.293a1 1 0 011.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
+                    </svg>
+                  </span>
+                </Listbox.Button>
+                <Transition
+                  as={Fragment}
+                  leave="transition ease-in duration-100"
+                  leaveFrom="opacity-100"
+                  leaveTo="opacity-0"
+                >
+                  <Listbox.Options className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-lg bg-gray-900 border border-gray-800 py-1 shadow-lg focus:outline-none">
+                    {statusOptions.map((option) => (
+                      <Listbox.Option
+                        key={option.value}
+                        value={option.value}
+                        className={({ active }) =>
+                          `relative cursor-pointer select-none py-2 pl-4 pr-10 ${
+                            active ? 'bg-blue-600 text-white' : 'text-gray-300'
+                          }`
+                        }
+                      >
+                        {({ selected, active }) => (
+                          <>
+                            <span className={`flex items-center gap-2 text-sm ${selected ? 'font-medium' : 'font-normal'}`}>
+                              <span>{option.emoji}</span>
+                              <span>{option.label}</span>
+                            </span>
+                            {selected ? (
+                              <span className={`absolute inset-y-0 right-0 flex items-center pr-3 ${active ? 'text-white' : 'text-blue-500'}`}>
+                                <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                </svg>
+                              </span>
+                            ) : null}
+                          </>
+                        )}
+                      </Listbox.Option>
+                    ))}
+                  </Listbox.Options>
+                </Transition>
               </div>
-            </div>
+            </Listbox>
           </div>
         </div>
 
@@ -295,6 +378,34 @@ export default function AdminJobs() {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                         </svg>
                       </a>
+                      
+                      {/* Cancel button - only for queued/downloading */}
+                      {(job.status === "queued" || job.status === "downloading") && (
+                        <button
+                          onClick={() => cancelJob(job.id, job.playlist_name || "Unknown")}
+                          className="p-2 text-yellow-400 hover:bg-yellow-500/10 rounded-lg transition cursor-pointer"
+                          title="Cancel Job"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                        </button>
+                      )}
+                      
+                      {/* Resume button - only for failed/cancelled */}
+                      {(job.status === "failed" || job.status === "cancelled" || job.status === "partial") && (
+                        <button
+                          onClick={() => resumeJob(job.id, job.playlist_name || "Unknown")}
+                          className="p-2 text-green-400 hover:bg-green-500/10 rounded-lg transition cursor-pointer"
+                          title="Resume Job"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                        </button>
+                      )}
+                      
                       <button
                         onClick={() => deleteJob(job.id, job.playlist_name || "Unknown")}
                         className="p-2 text-red-400 hover:bg-red-500/10 rounded-lg transition cursor-pointer"

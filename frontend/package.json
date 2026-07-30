@@ -8,6 +8,7 @@
     "start": "next start"
   },
   "dependencies": {
+    "@headlessui/react": "^2.2.10",
     "axios": "1.19.0",
     "lucide-react": "1.27.0",
     "next": "16.2.12",

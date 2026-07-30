@@ -331,6 +331,86 @@ def list_all_jobs(
     return {"jobs": result, "total": total}
 
 
+@router.delete("/jobs/{job_id}")
+def delete_job(
+    job_id: int,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    if not user.is_admin:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    job = db.query(Job).filter(Job.id == job_id).first()
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    
+    job_dir = os.path.join(STORAGE_DIR, str(job.user_id), str(job_id))
+    if os.path.exists(job_dir):
+        shutil.rmtree(job_dir, ignore_errors=True)
+    
+    db.query(PlaylistItem).filter(PlaylistItem.job_id == job_id).delete()
+    db.delete(job)
+    db.commit()
+    
+    logger.info("Admin %s deleted job %s", user.email, job_id)
+    
+    return {"message": "Job deleted"}
+
+
+@router.post("/jobs/{job_id}/cancel")
+def cancel_job(
+    job_id: int,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    if not user.is_admin:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    job = db.query(Job).filter(Job.id == job_id).first()
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    
+    if job.status not in ("queued", "downloading"):
+        raise HTTPException(status_code=400, detail="Job is not running")
+    
+    job.status = "cancelled"
+    job.error = "Cancelled by admin"
+    db.query(PlaylistItem).filter(
+        PlaylistItem.job_id == job_id,
+        PlaylistItem.status == "downloading"
+    ).update({"status": "queued"})
+    db.commit()
+    
+    logger.info("Admin %s cancelled job %s", user.email, job_id)
+    
+    return {"message": "Job cancelled", "id": job_id}
+
+
+@router.post("/jobs/{job_id}/resume")
+def resume_job(
+    job_id: int,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    if not user.is_admin:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    job = db.query(Job).filter(Job.id == job_id).first()
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    
+    from tasks import download_playlist
+    
+    job.status = "queued"
+    job.error = None
+    db.commit()
+    
+    download_playlist.delay(job.id, job.playlist_url)
+    logger.info("Admin %s resumed job %s", user.email, job_id)
+    
+    return {"message": "Job resumed", "id": job_id}
+
+
 @router.post("/cleanup")
 def run_cleanup(
     request: CleanupRequest,
