@@ -9,8 +9,12 @@ from dotenv import load_dotenv
 
 load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"))
 
-# Add deno to PATH for yt-dlp
-os.environ['PATH'] = f"/home/bits/.deno/bin:{os.environ.get('PATH', '')}"
+# Add deno to PATH for yt-dlp (check both Docker and local paths)
+deno_paths = ["/usr/local/bin", "/home/bits/.deno/bin"]
+for deno_path in deno_paths:
+    if os.path.exists(os.path.join(deno_path, "deno")):
+        os.environ['PATH'] = f"{deno_path}:{os.environ.get('PATH', '')}"
+        break
 
 logger = logging.getLogger(__name__)
 

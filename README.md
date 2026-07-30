@@ -1,131 +1,179 @@
-# YTMp3.in
+# YTMp3.in - YouTube Downloader
 
-Bulk YouTube audio downloader — m4a (AAC) output, per-user cookies auth, dark neomorphic UI. Mendukung single video dan playlist penuh, dengan resume, retry per-item, dan progress bar.
+YouTube video and playlist downloader with multi-format audio conversion (M4A, MP3, OPUS, OGG, FLAC).
 
-## Stack
+## Features
 
-| Layer | Tech |
-|-------|------|
-| Frontend | Next.js 16 + Tailwind CSS v4 + Lucide icons |
-| Backend  | FastAPI + yt-dlp |
-| Queue    | Celery + Redis |
-| Database | SQLite (via SQLAlchemy) |
-| Auth     | JWT (HS256) + bcrypt, httpOnly cookies |
-| Storage  | File system (per-user folders) |
+- Download single YouTube videos
+- Download full playlists with progress tracking
+- Multi-format audio conversion (M4A, MP3, OPUS, OGG, FLAC)
+- Real-time progress tracking
+- Cancel and resume downloads
+- User authentication
+- Anti-bot bypass using Deno runtime
 
-## Fitur
+## Tech Stack
 
-- Register/login email dengan httpOnly JWT cookies
-- Download single video atau playlist YouTube → m4a (AAC)
-- Progress bar real-time di dashboard
-- Per-item download: setiap file bisa didownload begitu selesai
-- Resume otomatis: file yang sudah terdownload dilewati saat diulang
-- Retry per-item untuk video yang gagal
-- Cookies auth (upload `cookies.txt`) untuk akses video unlisted/private
-- Dark neomorphic UI
+- **Frontend**: Next.js 15, TypeScript, TailwindCSS
+- **Backend**: FastAPI, SQLAlchemy, Celery
+- **Queue**: Redis
+- **Downloader**: yt-dlp with Deno runtime
+- **Converter**: FFmpeg
 
-## Development Mode
+## Setup
 
-### Prasyarat
+### Production (Docker Compose)
 
-- Python >= 3.12
-- Node.js >= 22
-- Redis (dijalankan secara lokal atau via Docker)
+1. Copy environment file:
+```bash
+cp .env.example .env
+```
 
-### Setup Backend
+2. Edit `.env` and set your values:
+```env
+DATABASE_URL=sqlite:////app/data/downloads.db
+REDIS_URL=redis://redis:6379/0
+SECRET_KEY=your-secret-key-here
+YTDL_FORMAT=m4a
+STORAGE_DIR=/app/storage
+ALLOWED_ORIGINS=http://localhost:3000,https://yourdomain.com
+PASSWORD_MIN_LENGTH=8
+NEXT_PUBLIC_API_URL=http://localhost:8000
+```
 
+3. Generate a secure `SECRET_KEY`:
+```bash
+openssl rand -hex 32
+```
+
+4. Start services:
+```bash
+docker-compose up -d
+```
+
+5. Access:
+- Frontend: http://localhost:3000
+- Backend API: http://localhost:8000
+
+### Development (Local)
+
+1. Copy development environment file:
+```bash
+cp .env.development .env
+```
+
+2. Install Redis:
+```bash
+# Ubuntu/Debian
+sudo apt install redis-server
+
+# macOS
+brew install redis
+```
+
+3. Install Deno (required for yt-dlp anti-bot):
+```bash
+curl -fsSL https://deno.land/install.sh | sh
+```
+
+4. Install backend dependencies:
 ```bash
 cd backend
-python3 -m venv .venv
-source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-Jalankan backend:
-
+5. Install frontend dependencies:
 ```bash
-cd backend
-source .venv/bin/activate
-uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+cd frontend
+npm install
 ```
 
-Jalankan Celery worker:
+6. Start Redis:
+```bash
+redis-server
+```
 
+7. Start Celery worker:
 ```bash
 cd backend
-source .venv/bin/activate
 celery -A tasks worker --loglevel=info --concurrency=2
 ```
 
-### Setup Frontend
+8. Start backend:
+```bash
+cd backend
+uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+```
 
+9. Start frontend:
 ```bash
 cd frontend
-npm install
 npm run dev
 ```
 
-Frontend berjalan di http://localhost:3000, backend di http://localhost:8000.
+10. Access:
+- Frontend: http://localhost:3000
+- Backend API: http://localhost:8000
 
-## Production Mode
+## Environment Variables
 
-### Docker Compose (Rekomendasi)
+### Required
+- `SECRET_KEY`: JWT secret key (generate with `openssl rand -hex 32`)
+- `DATABASE_URL`: SQLite database path
+- `REDIS_URL`: Redis connection URL
+- `STORAGE_DIR`: Directory for downloaded files
+- `ALLOWED_ORIGINS`: Comma-separated CORS origins
+- `NEXT_PUBLIC_API_URL`: Backend API URL for frontend
 
+### Optional
+- `PASSWORD_MIN_LENGTH`: Minimum password length (default: 8)
+- `YTDL_FORMAT`: Default download format (default: m4a)
+
+## API Endpoints
+
+### Authentication
+- `POST /api/auth/register` - Register new user
+- `POST /api/auth/login` - Login
+- `POST /api/auth/logout` - Logout
+- `GET /api/auth/profile` - Get user profile
+- `PUT /api/auth/update-profile` - Update profile
+- `POST /api/auth/change-password` - Change password
+
+### Jobs
+- `GET /api/jobs` - List all jobs
+- `POST /api/jobs` - Create new download job
+- `DELETE /api/jobs/{job_id}` - Delete job
+- `POST /api/jobs/{job_id}/cancel` - Cancel job
+- `POST /api/jobs/{job_id}/resume` - Resume cancelled job
+
+### Downloads
+- `GET /api/download/{job_id}` - Download M4A (original)
+- `GET /api/download/{job_id}/{format}` - Download converted format (mp3/opus/ogg/flac)
+- `GET /api/download/item/{item_id}/{format}` - Download playlist item in format
+
+## Docker Volumes
+
+- `app_data`: Database and application data
+- `app_storage`: Downloaded files
+- `redis_data`: Redis persistence
+
+## Troubleshooting
+
+### Deno not found error
+Ensure Deno is installed and in PATH. For Docker, rebuild the image:
 ```bash
-docker compose up --build -d
+docker-compose build backend worker
 ```
 
-### Manual (Production)
-
-```bash
-# Backend
-cd backend
-source .venv/bin/activate
-uvicorn main:app --host 0.0.0.0 --port 8000
-
-# Celery
-celery -A tasks worker --loglevel=info --concurrency=4
-
-# Frontend
-cd frontend
-npm install
-npm run build
-npm start
+### CORS errors
+Add your frontend URL to `ALLOWED_ORIGINS` in `.env`:
+```env
+ALLOWED_ORIGINS=http://localhost:3000,https://yourdomain.com
 ```
 
-### Environment Variables
+### Download timeout
+Default timeout is 3 minutes per item. Large files or slow connections may timeout. Adjust in `tasks.py` if needed.
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `DATABASE_URL` | `sqlite:////app/data/downloads.db` | Path database SQLite |
-| `REDIS_URL` | `redis://localhost:6379/0` | Redis broker URL |
-| `SECRET_KEY` | *(random)* | JWT signing key |
-| `YTDL_FORMAT` | `m4a` | Format audio output |
-| `STORAGE_DIR` | `/app/storage` | Penyimpanan file hasil download |
-| `ALLOWED_ORIGINS` | `http://localhost:3000` | CORS allowed origins |
-| `PASSWORD_MIN_LENGTH` | `8` | Minimal panjang password |
+## License
 
-## Setup Cookies
-
-Untuk mengakses video YouTube unlisted/private, Anda perlu upload cookies:
-
-1. Install ekstensi [Get cookies.txt](https://chrome.google.com/webstore/detail/get-cookiestxt/bgaddhkoddajcdgocldbbfleckgcbcid) di Chrome
-2. Kunjungi YouTube.com dan pastikan sudah login
-3. Klik ikon ekstensi → Export → simpan sebagai `cookies.txt`
-4. Buka dashboard YTMp3 → Profile → upload file `cookies.txt`
-
-Cookies disimpan per-user di folder `data/users/{user_id}/cookies.txt`.
-
-## Maps Folder
-
-```
-data/
-├── users/{user_id}/cookies.txt
-└── downloads.db
-
-storage/
-└── {user_id}/{job_id}/
-    ├── 001 - Title Video.m4a
-    ├── 002 - Title Video.m4a
-    └── ...
-```
+MIT
