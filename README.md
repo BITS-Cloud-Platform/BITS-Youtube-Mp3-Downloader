@@ -1,199 +1,518 @@
-# YTMp3.in - YouTube Downloader
+<div align="center">
+  <img src="https://ytmp3.bits.co.id/favicon.ico" alt="YTMp3" width="80" />
+  <h1 align="center">YTMp3.in</h1>
+  <p align="center">
+    YouTube Audio Downloader — Download, Convert, Enjoy.
+    <br />
+    <a href="https://ytmp3.bits.co.id"><strong>ytmp3.bits.co.id »</strong></a>
+    <br />
+    <br />
+    <a href="#features">Features</a>
+    ·
+    <a href="#tech-stack">Tech Stack</a>
+    ·
+    <a href="#quick-start-docker">Quick Start</a>
+    ·
+    <a href="#development">Development</a>
+    ·
+    <a href="#admin-panel">Admin Panel</a>
+  </p>
+  <p>
+    <img src="https://img.shields.io/badge/Next.js-15-black?style=flat&logo=next.js" alt="Next.js 15" />
+    <img src="https://img.shields.io/badge/Python-3.12-blue?style=flat&logo=python" alt="Python 3.12" />
+    <img src="https://img.shields.io/badge/FastAPI-0.115-009688?style=flat&logo=fastapi" alt="FastAPI" />
+    <img src="https://img.shields.io/badge/Docker-Compose-2496ED?style=flat&logo=docker" alt="Docker Compose" />
+    <img src="https://img.shields.io/badge/license-MIT-green?style=flat" alt="MIT License" />
+  </p>
+  <p>
+    Built with ❤️ by <a href="https://bits.co.id"><strong>Banten IT Solutions</strong></a>
+  </p>
+</div>
 
-YouTube video and playlist downloader with multi-format audio conversion (M4A, MP3, OPUS, OGG, FLAC).
+---
+
+## Table of Contents
+
+- [Features](#features)
+- [Live Demo](#live-demo)
+- [Tech Stack](#tech-stack)
+- [Quick Start (Docker)](#quick-start-docker)
+- [Development](#development)
+- [Environment Configuration](#environment-configuration)
+- [API Endpoints](#api-endpoints)
+- [Admin Panel](#admin-panel)
+- [Project Structure](#project-structure)
+- [Docker Volumes](#docker-volumes)
+- [Troubleshooting](#troubleshooting)
+- [Security Notes](#security-notes)
+- [License](#license)
+
+---
 
 ## Features
 
-- Download single YouTube videos
-- Download full playlists with progress tracking
-- Multi-format audio conversion (M4A, MP3, OPUS, OGG, FLAC)
-- Real-time progress tracking
-- Cancel and resume downloads
-- User authentication
-- Anti-bot bypass using Deno runtime
+- **Download YouTube Videos & Playlists** — Single video or full playlist with progress tracking
+- **Multi-Format Audio Conversion** — M4A (original), MP3, OPUS, OGG, FLAC
+- **Real-Time Progress** — Live download and conversion progress updates
+- **Cancel & Resume** — Cancel ongoing downloads and resume them later
+- **User Authentication** — Register, login, profile management
+- **Admin Dashboard** — User management, job monitoring, disk usage, system stats
+- **Anti-Bot Protection** — Bypass YouTube bot detection using Deno runtime
+- **Docker Support** — One-command deployment with Docker Compose
+- **Responsive UI** — Modern, mobile-friendly interface built with TailwindCSS
+
+---
+
+## Live Demo
+
+The application is live at: **[https://ytmp3.bits.co.id](https://ytmp3.bits.co.id)**
+
+---
 
 ## Tech Stack
 
-- **Frontend**: Next.js 15, TypeScript, TailwindCSS
-- **Backend**: FastAPI, SQLAlchemy, Celery
-- **Queue**: Redis
-- **Downloader**: yt-dlp with Deno runtime
-- **Converter**: FFmpeg
+| Layer | Technology |
+|-------|-----------|
+| **Frontend** | Next.js 15, TypeScript, TailwindCSS |
+| **Backend** | FastAPI, SQLAlchemy, Celery |
+| **Queue & Cache** | Redis 7 |
+| **Downloader** | yt-dlp with Deno runtime |
+| **Converter** | FFmpeg |
+| **Auth** | JWT (access + refresh tokens) + bcrypt |
+| **Container** | Docker & Docker Compose |
 
-## Setup
+---
 
-### Production (Docker Compose)
+## Quick Start (Docker)
 
-1. Copy environment file:
+The fastest way to run the project in production:
+
+### Prerequisites
+
+- Docker & Docker Compose v2
+- Git
+
+### Steps
+
 ```bash
+# 1. Clone the repository
+git clone https://github.com/yourusername/ytmp3.git
+cd ytmp3
+
+# 2. Copy the production environment template
 cp .env.example .env.production
+
+# 3. Edit the production environment
+#    IMPORTANT: Generate a strong SECRET_KEY
+nano .env.production
 ```
 
-2. Edit `.env.production` and set your values:
+**.env.production reference:**
+
 ```env
 DATABASE_URL=sqlite:////app/data/downloads.db
 REDIS_URL=redis://redis:6379/0
-SECRET_KEY=your-secret-key-here
+SECRET_KEY=generate-a-secure-random-key
 YTDL_FORMAT=m4a
 STORAGE_DIR=/app/storage
 ALLOWED_ORIGINS=http://localhost:3000,https://yourdomain.com
 PASSWORD_MIN_LENGTH=8
-NEXT_PUBLIC_API_URL=http://localhost:8000
+NEXT_PUBLIC_API_URL=https://yourdomain.com
+DEFAULT_ADMIN_EMAIL=admin@mail.com
+DEFAULT_ADMIN_PASSWORD=change-me-immediately
 ```
 
-3. Generate a secure `SECRET_KEY`:
-```bash
-openssl rand -hex 32
-```
+> **Generate a secure SECRET_KEY:**
+> ```bash
+> openssl rand -hex 32
+> ```
 
-4. Start services:
 ```bash
+# 4. Start all services
 docker-compose up -d
+
+# 5. Access the application
+#    Frontend : http://localhost:3000
+#    API      : http://localhost:8000
 ```
 
-5. Access:
-- Frontend: http://localhost:3000
-- Backend API: http://localhost:8000
+### Docker Services
 
-### Development (Local)
+| Service | Image/ Build | Port | Description |
+|---------|-------------|------|-------------|
+| `frontend` | `./frontend` (Dockerfile) | 3000 | Next.js UI |
+| `backend` | `./backend` (Dockerfile) | 8000 | FastAPI server |
+| `worker` | `./backend` (Dockerfile) | — | Celery async worker |
+| `redis` | `redis:7-alpine` | 6379 | Queue & cache |
 
-1. Setup environment files:
+---
+
+## Development
+
+### Prerequisites
+
+- Python 3.12+
+- Node.js 18+
+- Redis 7+
+- Deno (for yt-dlp anti-bot)
+- FFmpeg
+
+### 1. Clone & Setup Environment
+
 ```bash
+git clone https://github.com/yourusername/ytmp3.git
+cd ytmp3
+
 # Backend environment
-cp .env.development backend/.env
+cp .env.example backend/.env
+# Edit backend/.env with your local paths
 
 # Frontend environment
-cp .env.development frontend/.env.local
+cp .env.example frontend/.env.local
 ```
 
-2. Install Redis:
+### 2. Install Redis
+
 ```bash
-# Ubuntu/Debian
+# Ubuntu / Debian
 sudo apt install redis-server
 
 # macOS
 brew install redis
 ```
 
-3. Install Deno (required for yt-dlp anti-bot):
+### 3. Install Deno
+
 ```bash
 curl -fsSL https://deno.land/install.sh | sh
 ```
 
-4. Install backend dependencies:
+### 4. Backend Setup
+
 ```bash
 cd backend
+python -m venv .venv
+source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-5. Install frontend dependencies:
+### 5. Frontend Setup
+
 ```bash
 cd frontend
 npm install
 ```
 
-6. Start Redis:
+### 6. Run Services
+
+Open three terminals:
+
+**Terminal 1 — Redis:**
 ```bash
 redis-server
 ```
 
-7. Start Celery worker:
+**Terminal 2 — Celery Worker:**
 ```bash
 cd backend
+source .venv/bin/activate
+export PATH="$HOME/.deno/bin:$PATH"
 celery -A tasks worker --loglevel=info --concurrency=2
 ```
 
-8. Start backend:
+**Terminal 3 — Backend:**
 ```bash
 cd backend
+source .venv/bin/activate
+export PATH="$HOME/.deno/bin:$PATH"
 uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-9. Start frontend:
+**Terminal 4 — Frontend:**
 ```bash
 cd frontend
 npm run dev
 ```
 
-10. Access:
-- Frontend: http://localhost:3000
-- Backend API: http://localhost:8000
+### 7. Access
 
-## Environment Files Structure
+- **Frontend**: http://localhost:3000
+- **API**: http://localhost:8000
 
-### For Local Development:
-- `backend/.env` - Backend configuration (local paths, localhost Redis)
-- `frontend/.env.local` - Frontend configuration
-- `.env.development` - Template for development
+---
 
-### For Docker Production:
-- `.env.production` - Docker configuration (container paths, service names)
-- Environment variables are loaded from `.env.production` via docker-compose.yml
+## Environment Configuration
 
-### How It Works:
-The application automatically detects the environment:
-- **Local**: Looks for `backend/.env` first, uses local paths
-- **Docker**: Uses environment variables injected by Docker Compose from `.env.production`
+### Auto-Detection Logic
 
-## Environment Variables
+The backend automatically detects the environment:
 
-### Required
-- `SECRET_KEY`: JWT secret key (generate with `openssl rand -hex 32`)
-- `DATABASE_URL`: SQLite database path
-- `REDIS_URL`: Redis connection URL
-- `STORAGE_DIR`: Directory for downloaded files
-- `ALLOWED_ORIGINS`: Comma-separated CORS origins
-- `NEXT_PUBLIC_API_URL`: Backend API URL for frontend
+```python
+env_path = os.path.join(os.path.dirname(__file__), ".env")
+if os.path.exists(env_path):
+    load_dotenv(env_path)    # Local: loads from backend/.env
+else:
+    load_dotenv()            # Docker: loads from environment variables
+```
 
-### Optional
-- `PASSWORD_MIN_LENGTH`: Minimum password length (default: 8)
-- `YTDL_FORMAT`: Default download format (default: m4a)
+### File Structure
+
+```
+ytmp3/
+├── .env.example            # Template/reference for all environments
+├── .env.development        # Template for local development (not tracked)
+├── .env.production         # Configuration for Docker production (not tracked)
+├── backend/
+│   └── .env               # Backend config for local dev (gitignored)
+└── frontend/
+    └── .env.local         # Frontend config for local dev (gitignored)
+```
+
+### Required Environment Variables
+
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `DATABASE_URL` | SQLite database path | `sqlite:///./data/downloads.db` |
+| `REDIS_URL` | Redis connection URL | `redis://localhost:6379/0` |
+| `SECRET_KEY` | JWT signing secret | `openssl rand -hex 32` |
+| `STORAGE_DIR` | Download storage path | `./storage` |
+| `ALLOWED_ORIGINS` | CORS allowed origins | `http://localhost:3000` |
+| `NEXT_PUBLIC_API_URL` | Backend URL for frontend | `http://localhost:8000` |
+
+### Optional Variables
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `PASSWORD_MIN_LENGTH` | Minimum password length | `8` |
+| `YTDL_FORMAT` | Default download format | `m4a` |
+| `DEFAULT_ADMIN_EMAIL` | Auto-created admin email | `admin@mail.com` |
+| `DEFAULT_ADMIN_PASSWORD` | Auto-created admin password | `change-me` |
+
+---
 
 ## API Endpoints
 
 ### Authentication
-- `POST /api/auth/register` - Register new user
-- `POST /api/auth/login` - Login
-- `POST /api/auth/logout` - Logout
-- `GET /api/auth/profile` - Get user profile
-- `PUT /api/auth/update-profile` - Update profile
-- `POST /api/auth/change-password` - Change password
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/api/auth/register` | Register new user |
+| `POST` | `/api/auth/login` | Login |
+| `POST` | `/api/auth/logout` | Logout |
+| `GET` | `/api/auth/profile` | Get user profile |
+| `PUT` | `/api/auth/update-profile` | Update profile |
+| `POST` | `/api/auth/change-password` | Change password |
 
 ### Jobs
-- `GET /api/jobs` - List all jobs
-- `POST /api/jobs` - Create new download job
-- `DELETE /api/jobs/{job_id}` - Delete job
-- `POST /api/jobs/{job_id}/cancel` - Cancel job
-- `POST /api/jobs/{job_id}/resume` - Resume cancelled job
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/jobs` | List all jobs |
+| `POST` | `/api/jobs` | Create new download job |
+| `DELETE` | `/api/jobs/{job_id}` | Delete job |
+| `POST` | `/api/jobs/{job_id}/cancel` | Cancel job |
+| `POST` | `/api/jobs/{job_id}/resume` | Resume cancelled job |
 
 ### Downloads
-- `GET /api/download/{job_id}` - Download M4A (original)
-- `GET /api/download/{job_id}/{format}` - Download converted format (mp3/opus/ogg/flac)
-- `GET /api/download/item/{item_id}/{format}` - Download playlist item in format
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/download/{job_id}` | Download M4A (original) |
+| `GET` | `/api/download/{job_id}/{format}` | Download converted format |
+| `GET` | `/api/download/item/{item_id}/{format}` | Download playlist item |
+
+### Admin
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/admin/stats` | Dashboard overview |
+| `GET` | `/api/admin/users` | List all users |
+| `GET` | `/api/admin/users/{id}` | User details |
+| `PUT` | `/api/admin/users/{id}` | Update user |
+| `DELETE` | `/api/admin/users/{id}` | Delete user & files |
+| `GET` | `/api/admin/jobs` | List all jobs with filters |
+| `POST` | `/api/admin/cleanup` | Run file cleanup |
+| `GET` | `/api/admin/settings` | List settings |
+| `PUT` | `/api/admin/settings` | Update settings |
+| `GET` | `/api/admin/disk` | Disk usage stats |
+
+---
+
+## Admin Panel
+
+The application includes a full-featured admin dashboard accessible to users with admin privileges.
+
+### Default Admin Account
+
+On first startup, a default admin account is automatically created:
+
+```
+Email:    admin@mail.com
+Password: (set via DEFAULT_ADMIN_PASSWORD in .env)
+```
+
+> **⚠️ IMPORTANT:** Change the default password immediately after first login!
+
+To customize the default admin credentials, set these environment variables:
+
+```env
+DEFAULT_ADMIN_EMAIL=your@email.com
+DEFAULT_ADMIN_PASSWORD=your-secure-password
+```
+
+### Accessing the Admin Panel
+
+1. Log in with admin credentials
+2. Click the **Shield icon** in the dashboard
+3. Navigate to **Users**, **Jobs**, or **Settings**
+
+### Admin Features
+
+| Feature | Description |
+|---------|-------------|
+| **Dashboard** | Overview stats (users, jobs, disk, CPU/RAM) |
+| **User Management** | List users, toggle active/ admin status, delete users |
+| **Job Monitoring** | View all jobs across users, filter by status |
+| **Settings** | Configure retention days, max file size, auto-cleanup |
+| **File Cleanup** | Dry-run preview, delete old files by retention policy |
+| **Disk Usage** | Per-user and total storage analytics |
+
+### Default Settings
+
+| Setting | Default | Description |
+|---------|---------|-------------|
+| `cleanup_retention_days` | `30` | Days to keep completed jobs |
+| `max_file_size_mb` | `500` | Maximum download size |
+| `auto_cleanup_enabled` | `false` | Automatic cleanup toggle |
+
+### Security Notes for Admin
+
+- All admin routes verify the `is_admin` flag
+- Admins cannot remove their own admin access
+- Admins cannot delete their own account
+- User deletion permanently removes all associated files and jobs
+- Cleanup has a dry-run mode for safety
+
+---
+
+## Project Structure
+
+```
+ytmp3/
+├── backend/
+│   ├── main.py              # FastAPI application & routes
+│   ├── models.py            # SQLAlchemy database models
+│   ├── tasks.py             # Celery async tasks
+│   ├── admin_routes.py      # Admin API endpoints
+│   ├── admin_utils.py       # Admin utility functions
+│   ├── create_admin.py      # Default admin auto-creator
+│   ├── celery_app.py        # Celery configuration
+│   ├── requirements.txt     # Python dependencies
+│   ├── Dockerfile           # Backend & worker container
+│   └── .env                 # Local backend env (gitignored)
+├── frontend/
+│   ├── src/
+│   │   ├── app/
+│   │   │   ├── page.tsx            # Landing page
+│   │   │   ├── layout.tsx          # Root layout
+│   │   │   ├── login/              # Login page
+│   │   │   ├── signup/             # Registration
+│   │   │   ├── dashboard/          # User dashboard
+│   │   │   ├── profile/            # User profile
+│   │   │   └── admin/              # Admin panel
+│   │   │       ├── page.tsx        # Dashboard
+│   │   │       ├── users/          # User management
+│   │   │       ├── jobs/           # Job monitoring
+│   │   │       └── settings/       # System settings
+│   │   ├── components/             # Shared components
+│   │   └── globals.css             # Global styles
+│   ├── Dockerfile
+│   └── package.json
+├── data/                   # SQLite database (gitignored)
+├── storage/                # Downloaded files (gitignored)
+├── docker-compose.yml      # Docker orchestration
+├── .env.example            # Environment template
+└── .gitignore
+```
+
+---
 
 ## Docker Volumes
 
-- `app_data`: Database and application data
-- `app_storage`: Downloaded files
-- `redis_data`: Redis persistence
+| Volume | Mount | Description |
+|--------|-------|-------------|
+| `app_data` | `/app/data` | SQLite database & app data |
+| `app_storage` | `/app/storage` | Downloaded audio files |
+| `redis_data` | (Redis internal) | Redis persistence |
+
+---
 
 ## Troubleshooting
 
-### Deno not found error
-Ensure Deno is installed and in PATH. For Docker, rebuild the image:
+### Deno Not Found
+
+Ensure Deno is installed and in your PATH. For Docker, rebuild the image:
+
 ```bash
 docker-compose build backend worker
 ```
 
-### CORS errors
-Add your frontend URL to `ALLOWED_ORIGINS` in `.env`:
+### CORS Errors
+
+Add your frontend URL to `ALLOWED_ORIGINS`:
+
 ```env
 ALLOWED_ORIGINS=http://localhost:3000,https://yourdomain.com
 ```
 
-### Download timeout
-Default timeout is 3 minutes per item. Large files or slow connections may timeout. Adjust in `tasks.py` if needed.
+### Download Timeout
+
+Default timeout is 3 minutes per item. For large files or slow connections, adjust the timeout in `backend/tasks.py`.
+
+### Database or Storage Path Issues
+
+- Ensure `data/` and `storage/` directories exist:
+  ```bash
+  mkdir -p data storage
+  ```
+- Check `DATABASE_URL` and `STORAGE_DIR` in your environment file
+- For Docker, verify paths use container paths (`/app/...`)
+
+---
+
+## Security Notes
+
+- **SECRET_KEY** must be a cryptographically random value generated with `openssl rand -hex 32`
+- Never commit real `.env` files to version control
+- Change default admin credentials immediately after deployment
+- All passwords are hashed using bcrypt before storage
+- JWT tokens expire; refresh tokens are used for seamless re-authentication
+- Admin routes are protected by role-based access control (`is_admin` flag)
+- CORS is enforced; only origins in `ALLOWED_ORIGINS` can access the API
+
+---
 
 ## License
 
-MIT
+Distributed under the MIT License. See `LICENSE` for more information.
+
+---
+
+<div align="center">
+  <br />
+  <p>
+    <strong>YTMp3.in</strong> — Developed & Maintained by<br />
+    <a href="https://bits.co.id">
+      <img src="https://bits.co.id/assets/img/logo.png" alt="Banten IT Solutions" height="50" />
+      <br />
+      <strong>Banten IT Solutions</strong>
+    </a>
+  </p>
+  <p>
+    <a href="https://bits.co.id">https://bits.co.id</a>
+  </p>
+  <p>
+    <sub>Professional IT Solutions & Digital Services</sub>
+  </p>
+  <br />
+</div>

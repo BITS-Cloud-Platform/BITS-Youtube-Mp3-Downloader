@@ -1,31 +1,54 @@
-# SQLite DB & user cookies
-data/*
-!data/.gitkeep
+# ─── Environment & Secrets ───────────────────────────────────────────────────
+.env
+.env.local
+.env.*.local
+.env.development
+.env.production
 
-# Downloaded files
-storage/*
-!storage/.gitkeep
-
-# Python virtual environment
+# ─── Python ──────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+*.egg
+dist/
+build/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.whl
+venv/
 .venv/
+backend/venv/
 backend/.venv/
-**/__pycache__/
-*.pyc
 
-# Node dependencies and Next.js build files
+# ─── Node.js & Next.js ──────────────────────────────────────────────────────
 node_modules/
 frontend/node_modules/
-frontend/.next/
 .next/
+frontend/.next/
+out/
+build/
+dist/
+*.tsbuildinfo
 next-env.d.ts
 
-# Logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
+# ─── IDE & Editors ───────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+*.sublime-workspace
+*.sublime-project
 
-# OS generated files
+# ─── OS Files ────────────────────────────────────────────────────────────────
 .DS_Store
 .DS_Store?
 ._*
@@ -33,21 +56,37 @@ yarn-error.log*
 .Trashes
 ehthumbs.db
 Thumbs.db
+Desktop.ini
 
-# Environments
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+# ─── Logs & Debug ────────────────────────────────────────────────────────────
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
 
-# Celery
+# ─── Celery ──────────────────────────────────────────────────────────────────
 celerybeat-schedule
 celerybeat.pid
+*.pid
 
-# ffmpeg binaries
+# ─── Database ────────────────────────────────────────────────────────────────
+*.sqlite
+*.sqlite3
+*.db
+data/*
+!data/.gitkeep
+
+# ─── Downloads & Storage ─────────────────────────────────────────────────────
+storage/*
+!storage/.gitkeep
+
+# ─── Docker ──────────────────────────────────────────────────────────────────
+.docker/
+
+# ─── FFmpeg ──────────────────────────────────────────────────────────────────
+ffmpeg
+ffprobe
 backend/ffmpeg
 backend/ffprobe
-
-# TypeScript build info
-*.tsbuildinfo
