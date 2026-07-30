@@ -223,28 +223,36 @@ export default function UserDetailPage() {
                 No jobs found
               </div>
             ) : (
-              <div className="divide-y divide-gray-800">
-                {user.jobs.map((job) => (
-                  <div key={job.id} className="p-4 hover:bg-gray-800/50 transition">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <h3 className="text-base font-semibold text-white mb-1">
-                          {job.playlist_name || "Unknown Playlist"}
-                        </h3>
-                        <div className="flex items-center gap-4 text-sm text-gray-400">
-                          <span>ID: #{job.id}</span>
+              <div className="p-4">
+                <div className="max-h-96 overflow-y-auto space-y-2 pr-2">
+                  {user.jobs.map((job) => (
+                    <div key={job.id} className="flex items-center justify-between gap-3 p-3 bg-black/40 border border-gray-800 rounded-lg hover:border-gray-700 transition">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className={`w-2 h-2 rounded-full flex-shrink-0 ${
+                            job.status === 'completed' ? 'bg-green-500' :
+                            job.status === 'failed' ? 'bg-red-500' :
+                            job.status === 'downloading' ? 'bg-blue-500' :
+                            'bg-yellow-500'
+                          }`}></span>
+                          <h3 className="text-sm font-medium text-white truncate" title={job.playlist_name || "Unknown Playlist"}>
+                            {job.playlist_name || "Unknown Playlist"}
+                          </h3>
+                        </div>
+                        <div className="flex items-center gap-3 text-xs text-gray-400">
+                          <span>#{job.id}</span>
                           <span>•</span>
                           <span>{formatBytes(job.file_size)}</span>
                           <span>•</span>
                           <span>{new Date(job.created_at).toLocaleDateString()}</span>
                         </div>
                       </div>
-                      <span className={`px-3 py-1 text-xs rounded-full font-medium ${getStatusColor(job.status)}`}>
+                      <span className={`px-2 py-1 text-xs rounded-full font-medium flex-shrink-0 ${getStatusColor(job.status)}`}>
                         {job.status}
                       </span>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             )}
           </div>
