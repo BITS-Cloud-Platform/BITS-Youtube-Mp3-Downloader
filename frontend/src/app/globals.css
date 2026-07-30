@@ -74,3 +74,27 @@ body {
     box-shadow: inset 4px 4px 8px #0f0f11, inset -4px -4px 8px #212125, 0 0 0 1px #3f3f46;
   }
 }
+
+/* Dark scrollbar theme */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #18181b;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #3f3f46;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #52525b;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #3f3f46 #18181b;
+}
