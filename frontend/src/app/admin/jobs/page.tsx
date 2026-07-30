@@ -125,6 +125,25 @@ export default function AdminJobs() {
     setModalOpen(true);
   };
 
+  const getAvatarColor = (email: string) => {
+    const colors = [
+      "bg-blue-500",
+      "bg-purple-500",
+      "bg-pink-500",
+      "bg-green-500",
+      "bg-yellow-500",
+      "bg-red-500",
+      "bg-indigo-500",
+      "bg-teal-500",
+    ];
+    const index = email.charCodeAt(0) % colors.length;
+    return colors[index];
+  };
+
+  const getInitials = (email: string) => {
+    return email.slice(0, 2).toUpperCase();
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
@@ -163,7 +182,10 @@ export default function AdminJobs() {
           </label>
           <select
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
+            onChange={(e) => {
+              setStatusFilter(e.target.value);
+              setCurrentPage(1);
+            }}
             className="px-4 py-2 bg-gray-900 border border-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-white text-sm cursor-pointer"
           >
             <option value="all">All</option>
@@ -175,89 +197,93 @@ export default function AdminJobs() {
           </select>
         </div>
 
-        {/* Jobs Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {jobs.map((job) => (
-            <div
-              key={job.id}
-              className="bg-gray-900/50 border border-gray-800 rounded-lg p-6 hover:border-gray-700 transition"
-            >
-              {/* Job Header */}
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-xs text-gray-500 font-mono">#{job.id}</span>
-                    <span
-                      className={`px-2 py-1 text-xs rounded-full font-medium ${getStatusColor(
-                        job.status
-                      )}`}
-                    >
-                      {job.status}
-                    </span>
-                  </div>
-                  <h3 className="text-lg font-semibold text-white mb-1 line-clamp-2">
-                    {job.playlist_name || "Unknown Playlist"}
-                  </h3>
-                  <p className="text-sm text-gray-400">{job.user_email}</p>
-                </div>
-              </div>
-
-              {/* Progress Bar */}
-              <div className="mb-4">
-                <div className="flex items-center justify-between text-xs text-gray-400 mb-2">
-                  <span>Progress</span>
-                  <span>{job.completed_items} / {job.total_items}</span>
-                </div>
-                <div className="w-full bg-gray-800 rounded-full h-2">
-                  <div
-                    className="bg-blue-500 h-2 rounded-full transition-all"
-                    style={{ 
-                      width: `${job.total_items > 0 ? (job.completed_items / job.total_items) * 100 : 0}%` 
-                    }}
-                  ></div>
-                </div>
-              </div>
-
-              {/* Stats */}
-              <div className="grid grid-cols-2 gap-3 mb-4">
-                <div className="bg-black/40 rounded-lg p-3 border border-gray-800">
-                  <div className="text-xs text-gray-400 uppercase tracking-wide mb-1">Size</div>
-                  <div className="text-sm font-bold">{formatBytes(job.file_size)}</div>
-                </div>
-                <div className="bg-black/40 rounded-lg p-3 border border-gray-800">
-                  <div className="text-xs text-gray-400 uppercase tracking-wide mb-1">Created</div>
-                  <div className="text-sm font-bold">
-                    {new Date(job.created_at).toLocaleDateString()}
-                  </div>
-                </div>
-              </div>
-
-              {/* Actions */}
-              <div className="flex items-center gap-2 pt-4 border-t border-gray-800">
-                <a
-                  href={job.playlist_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex-1 px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition text-sm font-medium text-center cursor-pointer"
-                >
-                  View URL
-                </a>
-                <button
-                  onClick={() => deleteJob(job.id, job.playlist_name || "Unknown")}
-                  className="px-3 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition text-sm font-medium cursor-pointer"
-                >
-                  Delete
-                </button>
-              </div>
+        {/* Jobs List */}
+        <div className="bg-gray-900/50 border border-gray-800 rounded-lg overflow-hidden">
+          {jobs.length === 0 ? (
+            <div className="text-center py-12 text-gray-500">
+              No jobs found
             </div>
-          ))}
-        </div>
+          ) : (
+            <div className="divide-y divide-gray-800">
+              {jobs.map((job) => (
+                <div
+                  key={job.id}
+                  className="p-4 hover:bg-gray-800/50 transition group"
+                >
+                  <div className="flex items-center gap-4">
+                    {/* Avatar */}
+                    <div className={`w-12 h-12 rounded-full ${getAvatarColor(job.user_email)} flex items-center justify-center text-white font-bold text-sm flex-shrink-0`}>
+                      {getInitials(job.user_email)}
+                    </div>
 
-        {jobs.length === 0 && !loading && (
-          <div className="text-center py-12 text-gray-500">
-            No jobs found
-          </div>
-        )}
+                    {/* Job Info */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h3 className="text-base font-semibold text-white truncate">{job.playlist_name || "Unknown Playlist"}</h3>
+                        <span
+                          className={`px-2 py-0.5 text-xs rounded-full font-medium transition cursor-pointer ${getStatusColor(
+                            job.status
+                          )}`}
+                        >
+                          {job.status}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-4 text-xs text-gray-400">
+                        <span className="truncate">{job.user_email}</span>
+                        <span className="text-gray-600">•</span>
+                        <span>#{job.id}</span>
+                        <span className="text-gray-600">•</span>
+                        <span>{formatBytes(job.file_size)}</span>
+                      </div>
+                    </div>
+
+                    {/* Progress */}
+                    <div className="hidden lg:flex items-center gap-3 text-sm">
+                      <div className="text-center">
+                        <div className="text-white font-semibold">{job.completed_items}/{job.total_items}</div>
+                        <div className="text-xs text-gray-400">Items</div>
+                      </div>
+                      <div className="w-24">
+                        <div className="w-full bg-gray-800 rounded-full h-2">
+                          <div
+                            className="bg-blue-500 h-2 rounded-full transition-all"
+                            style={{ 
+                              width: `${job.total_items > 0 ? (job.completed_items / job.total_items) * 100 : 0}%` 
+                            }}
+                          ></div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <a
+                        href={job.playlist_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-2 text-blue-400 hover:bg-blue-500/10 rounded-lg transition cursor-pointer"
+                        title="View URL"
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
+                      </a>
+                      <button
+                        onClick={() => deleteJob(job.id, job.playlist_name || "Unknown")}
+                        className="p-2 text-red-400 hover:bg-red-500/10 rounded-lg transition cursor-pointer"
+                        title="Delete Job"
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
 
         {/* Pagination */}
         {totalPages > 1 && (
