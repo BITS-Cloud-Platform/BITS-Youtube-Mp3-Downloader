@@ -4,6 +4,11 @@ from datetime import datetime
 from models import Session, User, init_db
 
 def create_default_admin():
+    # Skip if disabled via env
+    if os.environ.get("SKIP_DEFAULT_ADMIN", "false").lower() == "true":
+        print("⊘ Skipping default admin creation (SKIP_DEFAULT_ADMIN=true)")
+        return
+    
     db = Session()
     try:
         admin_email = os.environ.get("DEFAULT_ADMIN_EMAIL", "admin@mail.com")
