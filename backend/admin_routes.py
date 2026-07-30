@@ -1,6 +1,7 @@
 import os
 import shutil
 import logging
+import bcrypt
 from fastapi import APIRouter, Depends, HTTPException, Request, Security
 from sqlalchemy.orm import Session
 from sqlalchemy import func, desc
