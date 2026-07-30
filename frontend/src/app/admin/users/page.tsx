@@ -41,6 +41,10 @@ export default function AdminUsers() {
     onConfirm: () => void;
     type: "danger" | "warning" | "info";
   } | null>(null);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editEmail, setEditEmail] = useState("");
 
   useEffect(() => {
     fetchUsers();
@@ -123,6 +127,30 @@ export default function AdminUsers() {
       type: "danger",
     });
     setModalOpen(true);
+  };
+
+  const openEditModal = (user: User) => {
+    setEditingUser(user);
+    setEditName(user.name);
+    setEditEmail(user.email);
+    setEditModalOpen(true);
+  };
+
+  const handleEditUser = async () => {
+    if (!editingUser) return;
+    
+    try {
+      await axios.put(
+        `${API_URL}/api/admin/users/${editingUser.id}`,
+        { name: editName, email: editEmail },
+        { withCredentials: true }
+      );
+      toast.success("User updated successfully");
+      setEditModalOpen(false);
+      fetchUsers();
+    } catch (err: any) {
+      toast.error(err.response?.data?.detail || "Failed to update user");
+    }
   };
 
   const getAvatarColor = (name: string) => {
@@ -254,33 +282,33 @@ export default function AdminUsers() {
                     </div>
 
                     {/* Stats */}
-                    <div className="hidden md:flex items-center gap-6 text-sm">
-                      <div className="text-center">
-                        <div className="flex items-center justify-center gap-1 mb-1">
-                          <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                          </svg>
-                          <span className="text-white font-semibold">{user.stats.total_jobs}</span>
+                    <div className="hidden lg:flex items-center gap-4 text-sm">
+                      <div className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-500/5 rounded-lg border border-blue-500/10">
+                        <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        <div>
+                          <div className="text-white font-semibold">{user.stats.total_jobs}</div>
+                          <div className="text-xs text-gray-400">Jobs</div>
                         </div>
-                        <div className="text-xs text-gray-400">Jobs</div>
                       </div>
-                      <div className="text-center">
-                        <div className="flex items-center justify-center gap-1 mb-1">
-                          <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                          <span className="text-white font-semibold">{user.stats.completed_jobs}</span>
+                      <div className="flex items-center gap-1.5 px-3 py-1.5 bg-green-500/5 rounded-lg border border-green-500/10">
+                        <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <div>
+                          <div className="text-white font-semibold">{user.stats.completed_jobs}</div>
+                          <div className="text-xs text-gray-400">Done</div>
                         </div>
-                        <div className="text-xs text-gray-400">Done</div>
                       </div>
-                      <div className="text-center">
-                        <div className="flex items-center justify-center gap-1 mb-1">
-                          <svg className="w-4 h-4 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
-                          </svg>
-                          <span className="text-white font-semibold">{user.stats.disk_usage.total_gb} GB</span>
+                      <div className="flex items-center gap-1.5 px-3 py-1.5 bg-orange-500/5 rounded-lg border border-orange-500/10">
+                        <svg className="w-4 h-4 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
+                        </svg>
+                        <div>
+                          <div className="text-white font-semibold">{user.stats.disk_usage.total_gb} GB</div>
+                          <div className="text-xs text-gray-400">Storage</div>
                         </div>
-                        <div className="text-xs text-gray-400">Storage</div>
                       </div>
                     </div>
 
@@ -294,6 +322,15 @@ export default function AdminUsers() {
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                      </button>
+                      <button
+                        onClick={() => openEditModal(user)}
+                        className="p-2 text-yellow-400 hover:bg-yellow-500/10 rounded-lg transition cursor-pointer"
+                        title="Edit User"
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                         </svg>
                       </button>
                       <button
@@ -328,6 +365,52 @@ export default function AdminUsers() {
           confirmText="Confirm"
           cancelText="Cancel"
         />
+      )}
+
+      {/* Edit User Modal */}
+      {editModalOpen && editingUser && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-900 border border-gray-800 rounded-lg max-w-md w-full p-6 scale-in">
+            <h3 className="text-xl font-bold text-white mb-4">Edit User</h3>
+            
+            <div className="space-y-4 mb-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Name</label>
+                <input
+                  type="text"
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  className="w-full px-4 py-2 bg-black border border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Email</label>
+                <input
+                  type="email"
+                  value={editEmail}
+                  onChange={(e) => setEditEmail(e.target.value)}
+                  className="w-full px-4 py-2 bg-black border border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setEditModalOpen(false)}
+                className="flex-1 px-4 py-2 bg-gray-700 text-white rounded-md hover:bg-gray-600 transition font-medium cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleEditUser}
+                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition font-medium cursor-pointer"
+              >
+                Save Changes
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
