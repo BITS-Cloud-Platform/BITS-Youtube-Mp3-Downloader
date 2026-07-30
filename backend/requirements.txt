@@ -14,3 +14,4 @@ email-validator==2.3.0
 python-dotenv==1.0.1
 python-multipart==0.0.20
 psutil==6.1.1
+curl-cffi>=0.5.10
