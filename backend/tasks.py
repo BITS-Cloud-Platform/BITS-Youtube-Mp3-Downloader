@@ -111,39 +111,61 @@ def download_playlist(self, job_id: int, playlist_url: str):
             if os.path.exists(user_cookies):
                 ydl_opts["cookiefile"] = user_cookies
 
-            try:
-                with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            def _try_download(no_cookies=False):
+                opts = dict(ydl_opts)
+                dl_dir = os.path.join(item_out_dir, "dl")
+                os.makedirs(dl_dir, exist_ok=True)
+                opts["outtmpl"] = os.path.join(dl_dir, "%(title)s.%(ext)s")
+                if no_cookies:
+                    opts.pop("cookiefile", None)
+                    opts["format"] = "bestaudio/best"
+                with yt_dlp.YoutubeDL(opts) as ydl:
                     ydl.download([url])
-
-                downloaded_files = os.listdir(item_out_dir)
-                if not downloaded_files:
-                    raise Exception("File tidak ditemukan setelah download selesai")
-
-                fname = downloaded_files[0]
-                src = os.path.join(item_out_dir, fname)
+                files = os.listdir(dl_dir)
+                if not files:
+                    raise Exception("File tidak ditemukan")
+                fname = files[0]
+                src = os.path.join(dl_dir, fname)
                 ext = os.path.splitext(fname)[1].lstrip(".")
                 safe_title = re.sub(r'[^\w\-_. ]', '', item.title).strip()[:80] or "audio"
                 if total_count > 1:
                     safe_title = f"{completed_count + 1:03d} - {safe_title}"
                 new_name = f"{safe_title}.{ext}"
                 dst = os.path.join(out_dir, new_name)
+                if os.path.exists(dst):
+                    os.remove(dst)
                 os.rename(src, dst)
-                shutil.rmtree(item_out_dir, ignore_errors=True)
+                shutil.rmtree(dl_dir, ignore_errors=True)
+                return dst, new_name, ext
 
-                item.filename = new_name
-                item.file_path = dst
-                item.file_size = os.path.getsize(dst)
-                item.status = "completed"
-                item.completed_at = datetime.utcnow()
-                completed_count += 1
-                job.completed_items = completed_count
-                db.commit()
-
+            try:
+                dst, new_name, ext = _try_download()
             except Exception as e:
-                item.status = "failed"
-                item.error = str(e)
-                shutil.rmtree(item_out_dir, ignore_errors=True)
-                db.commit()
+                err_msg = str(e).lower()
+                if os.path.exists(user_cookies) and ("format is not available" in err_msg or "sign in" in err_msg):
+                    try:
+                        dst, new_name, ext = _try_download(no_cookies=True)
+                    except Exception as e2:
+                        item.status = "failed"
+                        item.error = str(e2)
+                        shutil.rmtree(item_out_dir, ignore_errors=True)
+                        db.commit()
+                        continue
+                else:
+                    item.status = "failed"
+                    item.error = str(e)
+                    shutil.rmtree(item_out_dir, ignore_errors=True)
+                    db.commit()
+                    continue
+
+            item.filename = new_name
+            item.file_path = dst
+            item.file_size = os.path.getsize(dst)
+            item.status = "completed"
+            item.completed_at = datetime.utcnow()
+            completed_count += 1
+            job.completed_items = completed_count
+            db.commit()
 
         # If single video, propagate details to parent job
         if total_count == 1 and len(playlist_items) == 1:
