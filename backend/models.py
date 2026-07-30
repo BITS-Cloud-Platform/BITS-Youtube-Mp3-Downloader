@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 
 load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"))
 
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, Float
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, Float, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import create_engine, event
 from sqlalchemy.orm import sessionmaker, scoped_session
@@ -41,6 +41,21 @@ class Job(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     completed_at = Column(DateTime, nullable=True)
     format = Column(String, default="m4a")
+
+class PlaylistItem(Base):
+    __tablename__ = "playlist_items"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    job_id = Column(Integer, ForeignKey("jobs.id", ondelete="CASCADE"), nullable=False)
+    title = Column(String, nullable=False)
+    url = Column(String, nullable=True)
+    status = Column(String, default="queued") # queued, downloading, completed, failed
+    filename = Column(String, nullable=True)
+    file_path = Column(String, nullable=True)
+    file_size = Column(Float, default=0)
+    error = Column(String, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    completed_at = Column(DateTime, nullable=True)
 
 class User(Base):
     __tablename__ = "users"

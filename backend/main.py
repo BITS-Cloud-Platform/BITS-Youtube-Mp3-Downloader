@@ -12,7 +12,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import BaseModel, EmailStr, field_validator
 from sqlalchemy.orm import Session
-from models import Session as DBSession, Job, User, init_db
+from models import Session as DBSession, Job, PlaylistItem, User, init_db
 from tasks import download_playlist
 import bcrypt
 from jose import jwt, JWTError
@@ -29,7 +29,7 @@ if SECRET_KEY == "" or SECRET_KEY == "change-me-in-production":
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
 REFRESH_TOKEN_EXPIRE_DAYS = 30
-COOKIES_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data", "cookies")
+COOKIES_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data", "users")
 ALLOWED_ORIGINS = os.environ.get("ALLOWED_ORIGINS", "http://localhost:3000").split(",")
 PASSWORD_MIN_LENGTH = int(os.environ.get("PASSWORD_MIN_LENGTH", "8"))
 
@@ -270,8 +270,9 @@ def update_profile(
 def upload_cookies(file: UploadFile = File(...), user: User = Depends(get_current_user)):
     if not file.filename or not file.filename.endswith(".txt"):
         raise HTTPException(status_code=400, detail="Only .txt cookie files accepted")
-    os.makedirs(COOKIES_DIR, exist_ok=True)
-    user_path = os.path.join(COOKIES_DIR, f"{user.id}.txt")
+    user_dir = os.path.join(COOKIES_DIR, str(user.id))
+    os.makedirs(user_dir, exist_ok=True)
+    user_path = os.path.join(user_dir, "cookies.txt")
     with open(user_path, "wb") as f:
         content = file.file.read()
         f.write(content)
@@ -281,7 +282,8 @@ def upload_cookies(file: UploadFile = File(...), user: User = Depends(get_curren
 
 @app.get("/api/cookies/status")
 def cookies_status(user: User = Depends(get_current_user)):
-    user_path = os.path.join(COOKIES_DIR, f"{user.id}.txt")
+    user_dir = os.path.join(COOKIES_DIR, str(user.id))
+    user_path = os.path.join(user_dir, "cookies.txt")
     exists = os.path.exists(user_path)
     size = os.path.getsize(user_path) if exists else 0
     return {"cookies_loaded": exists, "size_bytes": size}
@@ -290,8 +292,10 @@ def cookies_status(user: User = Depends(get_current_user)):
 @app.get("/api/jobs")
 def list_jobs(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     jobs = db.query(Job).filter(Job.user_id == user.id).order_by(Job.created_at.desc()).all()
-    return [
-        {
+    res = []
+    for j in jobs:
+        items = db.query(PlaylistItem).filter(PlaylistItem.job_id == j.id).all()
+        res.append({
             "id": j.id,
             "playlist_url": j.playlist_url,
             "status": j.status,
@@ -303,9 +307,19 @@ def list_jobs(user: User = Depends(get_current_user), db: Session = Depends(get_
             "format": j.format,
             "created_at": j.created_at.isoformat() if j.created_at else None,
             "completed_at": j.completed_at.isoformat() if j.completed_at else None,
-        }
-        for j in jobs
-    ]
+            "items": [
+                {
+                    "id": item.id,
+                    "title": item.title,
+                    "status": item.status,
+                    "file_size": item.file_size,
+                    "error": item.error,
+                    "completed_at": item.completed_at.isoformat() if item.completed_at else None,
+                }
+                for item in items
+            ]
+        })
+    return res
 
 
 @app.post("/api/jobs")
@@ -324,11 +338,28 @@ def submit_job(request: SubmitJobRequest, user: User = Depends(get_current_user)
     return {"id": job.id, "status": "queued", "playlist_url": job.playlist_url}
 
 
+@app.post("/api/jobs/{job_id}/resume")
+def resume_job(job_id: int, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    job = db.query(Job).filter(Job.id == job_id, Job.user_id == user.id).first()
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    
+    if job.status == "downloading" or job.status == "queued":
+        raise HTTPException(status_code=400, detail="Job is already in progress")
+        
+    job.status = "queued"
+    db.commit()
+    download_playlist.delay(job.id, job.playlist_url)
+    logger.info("Job resumed by %s: %s", user.email, job.playlist_url)
+    return {"message": "Job resumed", "id": job.id}
+
+
 @app.get("/api/jobs/{job_id}")
 def get_job(job_id: int, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     job = db.query(Job).filter(Job.id == job_id, Job.user_id == user.id).first()
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")
+    items = db.query(PlaylistItem).filter(PlaylistItem.job_id == job.id).all()
     return {
         "id": job.id,
         "playlist_url": job.playlist_url,
@@ -341,6 +372,17 @@ def get_job(job_id: int, user: User = Depends(get_current_user), db: Session = D
         "format": job.format,
         "created_at": job.created_at.isoformat() if job.created_at else None,
         "completed_at": job.completed_at.isoformat() if job.completed_at else None,
+        "items": [
+            {
+                "id": item.id,
+                "title": item.title,
+                "status": item.status,
+                "file_size": item.file_size,
+                "error": item.error,
+                "completed_at": item.completed_at.isoformat() if item.completed_at else None,
+            }
+            for item in items
+        ]
     }
 
 
@@ -365,4 +407,33 @@ def download_file(
         open(job.file_path, "rb"),
         media_type="audio/mpeg",
         headers={"Content-Disposition": f'attachment; filename="{job.filename}"'},
+    )
+
+
+@app.get("/api/download/item/{item_id}")
+def download_playlist_item(
+    item_id: int,
+    user: Optional[User] = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    item = db.query(PlaylistItem).filter(PlaylistItem.id == item_id).first()
+    if not item:
+        raise HTTPException(status_code=404, detail="Item not found")
+    job = db.query(Job).filter(Job.id == item.job_id, Job.user_id == user.id).first()
+    if not job:
+        raise HTTPException(status_code=403, detail="Access denied")
+    if item.status != "completed":
+        raise HTTPException(status_code=400, detail="Item not completed")
+    if not item.file_path or not os.path.exists(item.file_path):
+        raise HTTPException(status_code=404, detail="File not found")
+    ext = os.path.splitext(item.file_path)[1].lstrip(".")
+    import re
+    safe_title = re.sub(r'[^\w\-_.]', '_', item.title)
+    filename = f"{safe_title}.{ext}"
+    return StreamingResponse(
+        open(item.file_path, "rb"),
+        media_type="audio/mpeg",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )

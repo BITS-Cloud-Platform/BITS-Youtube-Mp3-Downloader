@@ -7,7 +7,7 @@ load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"))
 
 import yt_dlp
 from celery_app import celery_app
-from models import Session, Job
+from models import Session, Job, PlaylistItem
 
 STORAGE_DIR = os.environ.get("STORAGE_DIR", "/app/storage")
 YTDL_FORMAT = os.environ.get("YTDL_FORMAT", "m4a")
@@ -20,73 +20,160 @@ def download_playlist(self, job_id: int, playlist_url: str):
     db = Session()
     job = db.query(Job).filter(Job.id == job_id).first()
     if not job:
+        db.close()
         return
 
     job.status = "downloading"
-    job.total_items = 0
-    job.completed_items = 0
     db.commit()
 
-    out_dir = os.path.join(STORAGE_DIR, str(job_id))
+    # User paths
+    user_cookies = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data", "users", str(job.user_id), "cookies.txt")
+    out_dir = os.path.join(STORAGE_DIR, str(job.user_id), str(job_id))
     os.makedirs(out_dir, exist_ok=True)
 
-    total = 0
-    completed = 0
+    # Resume: check if we already have PlaylistItem entries
+    existing_items = db.query(PlaylistItem).filter(PlaylistItem.job_id == job.id).order_by(PlaylistItem.id).all()
+    
+    if existing_items:
+        # We are resuming!
+        playlist_items = [(item, item.url) for item in existing_items]
+        # Keep completed_count accurate
+        completed_count = sum(1 for item in existing_items if item.status == "completed")
+        job.completed_items = completed_count
+        db.commit()
+    else:
+        # First time extraction
+        job.total_items = 0
+        job.completed_items = 0
+        db.commit()
 
-    def progress_hook(d):
-        nonlocal total, completed
-        if d["status"] == "download":
-            total += 1
-        elif d["status"] == "finished":
-            completed += 1
-            j = db.query(Job).filter(Job.id == job_id).first()
-            if j:
-                j.completed_items = completed
-                db.commit()
+        import urllib.parse as urlparse
+        parsed = urlparse.urlparse(playlist_url)
+        qs = urlparse.parse_qs(parsed.query)
+        if 'list' in qs:
+            playlist_url = f"https://www.youtube.com/playlist?list={qs['list'][0]}"
 
-    ydl_opts = {
-        "format": f"bestaudio/best",
-        "outtmpl": os.path.join(out_dir, "%(title)s.%(ext)s"),
-        "postprocessors": [],
-        "logger": type("Logger", (), {
-            "debug": lambda s, msg: None,
-            "warning": lambda s, msg: None,
-            "error": lambda s, msg: None,
-        })(),
-        "progress_hooks": [progress_hook],
-        "quiet": True,
-        "no_warnings": True,
-    }
+        ydl_opts_flat = {
+            "extract_flat": True,
+            "quiet": True,
+            "no_warnings": True,
+        }
+        if os.path.exists(user_cookies):
+            ydl_opts_flat["cookiefile"] = user_cookies
 
-    user_cookies = os.path.join(COOKIES_DIR, f"{job.user_id}.txt")
-    if os.path.exists(user_cookies):
-        ydl_opts["cookiefile"] = user_cookies
+        try:
+            with yt_dlp.YoutubeDL(ydl_opts_flat) as ydl:
+                info = ydl.extract_info(playlist_url, download=False)
+                entries = info.get("entries", [])
+                if not entries:
+                    entries = [info]
+        except Exception as e:
+            job.status = "failed"
+            job.error = f"Gagal mengambil info playlist: {str(e)}"
+            job.completed_at = __import__("datetime").datetime.utcnow()
+            db.commit()
+            db.close()
+            return
 
-    try:
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(playlist_url, download=True)
-            job.total_items = len(info.get("entries", [info])) if "entries" in info else 1
+        total_count = len(entries)
+        job.total_items = total_count
+        db.commit()
 
-        for fname in os.listdir(out_dir):
-            src = os.path.join(out_dir, fname)
+        playlist_items = []
+        for entry in entries:
+            title = entry.get("title", "Unknown Title")
+            url = entry.get("url") or entry.get("webpage_url")
+            if not url and entry.get("id"):
+                url = f"https://www.youtube.com/watch?v={entry['id']}"
+            
+            item = PlaylistItem(
+                job_id=job.id,
+                title=title,
+                url=url,
+                status="queued"
+            )
+            db.add(item)
+            playlist_items.append((item, url))
+        db.commit()
+        completed_count = 0
+
+    # Process items
+    for idx, (item, url) in enumerate(playlist_items):
+        if not url:
+            item.status = "failed"
+            item.error = "URL tidak valid"
+            db.commit()
+            continue
+
+        # Skip already completed items
+        if item.status == "completed" and item.file_path and os.path.exists(item.file_path):
+            continue
+
+        item.status = "downloading"
+        item.error = None
+        db.commit()
+
+        item_out_dir = os.path.join(out_dir, f"item_{item.id}")
+        os.makedirs(item_out_dir, exist_ok=True)
+
+        ydl_opts = {
+            "format": "bestaudio[ext=m4a]/bestaudio",
+            "outtmpl": os.path.join(item_out_dir, "%(title)s.%(ext)s"),
+            "postprocessors": [],
+            "quiet": True,
+            "no_warnings": True,
+        }
+        if YTDL_FORMAT == "mp3":
+            ydl_opts["postprocessors"].append({
+                "key": "FFmpegExtractAudio",
+                "preferredcodec": "mp3",
+                "preferredquality": "192",
+            })
+        if os.path.exists(user_cookies):
+            ydl_opts["cookiefile"] = user_cookies
+
+        try:
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                ydl.download([url])
+
+            downloaded_files = os.listdir(item_out_dir)
+            if not downloaded_files:
+                raise Exception("File tidak ditemukan setelah download selesai")
+
+            fname = downloaded_files[0]
+            src = os.path.join(item_out_dir, fname)
             ext = os.path.splitext(fname)[1].lstrip(".")
             new_name = f"{uuid.uuid4().hex}.{ext}"
             dst = os.path.join(out_dir, new_name)
             os.rename(src, dst)
-            job.filename = new_name
-            job.file_path = dst
-            job.file_size = os.path.getsize(dst)
-            job.status = "completed"
-            job.completed_items = job.total_items
-            job.completed_at = __import__("datetime").datetime.utcnow()
-            db.commit()
-            return {"job_id": job_id, "filename": new_name, "path": dst, "format": ext}
+            shutil.rmtree(item_out_dir, ignore_errors=True)
 
-    except Exception as e:
-        job.status = "failed"
-        job.error = str(e)
-        job.completed_at = __import__("datetime").datetime.utcnow()
-        db.commit()
-        raise
-    finally:
-        db.close()
+            item.filename = new_name
+            item.file_path = dst
+            item.file_size = os.path.getsize(dst)
+            item.status = "completed"
+            item.completed_at = __import__("datetime").datetime.utcnow()
+            
+            completed_count += 1
+            job.completed_items = completed_count
+            db.commit()
+
+        except Exception as e:
+            item.status = "failed"
+            item.error = str(e)
+            shutil.rmtree(item_out_dir, ignore_errors=True)
+            db.commit()
+
+    # If single video, propagate details to parent job
+    if total_count == 1 and len(playlist_items) == 1:
+        single_item = playlist_items[0][0]
+        if single_item.status == "completed":
+            job.filename = single_item.filename
+            job.file_path = single_item.file_path
+            job.file_size = single_item.file_size
+            job.completed_items = 1
+
+    job.status = "completed"
+    job.completed_at = __import__("datetime").datetime.utcnow()
+    db.commit()
+    db.close()
