@@ -262,6 +262,7 @@ cp .env.development backend/.env
 **.env (backend) reference — local dev:**
 ```env
 DATABASE_URL=sqlite:///./data/downloads.db
+DATA_DIR=./data
 REDIS_URL=redis://localhost:6379/0
 SECRET_KEY=dev-secret-key-change-in-production
 YTDL_FORMAT=m4a
@@ -384,6 +385,7 @@ ytmp3/
 | Variable | Description | Example (local dev) | Example (Docker) |
 |----------|-------------|---------------------|-------------------|
 | `DATABASE_URL` | SQLite database path | `sqlite:///./data/downloads.db` | `sqlite:////app/data/downloads.db` |
+| `DATA_DIR` | App data dir (SQLite, cookies per user) | `./data` | `/app/data` |
 | `REDIS_URL` | Redis connection URL | `redis://localhost:6379/0` | `redis://redis:6379/0` |
 | `SECRET_KEY` | JWT signing secret | `openssl rand -hex 32` | `openssl rand -hex 32` |
 | `STORAGE_DIR` | Download storage path | `./storage` | `/app/storage` |

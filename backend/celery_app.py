@@ -20,4 +20,6 @@ celery_app = Celery(
     timezone="UTC",
     task_track_started=True,
     broker_connection_retry_on_startup=True,
+    task_acks_late=True,
+    task_reject_on_worker_lost=True,
 )
