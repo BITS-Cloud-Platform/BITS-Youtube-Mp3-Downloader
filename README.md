@@ -187,18 +187,41 @@ docker compose up -d --build
 
 > **Note:** Only nginx exposes a host port (`3004 → 80`). `frontend` and `backend` have no host ports (`ports: []`) — they are reachable only inside the Docker network. All API requests go through nginx.
 
-### Automated Deployment (CI/CD)
+### CI: Build & Push (otomatis)
 
-Push ke `main` memicu GitHub Actions (`.github/workflows/build-deploy.yml`): build image backend + frontend, push ke GHCR (`ghcr.io/bits-cloud-platform/ytmp3-*`, tag `latest` + commit SHA), lalu SSH ke server → `git pull` → `docker compose pull` → `up -d` → restart nginx. Server tidak pernah build sendiri.
+Push ke `main` memicu GitHub Actions (`.github/workflows/build-push.yml`): build image backend + frontend, push ke GHCR (`ghcr.io/bits-cloud-platform/ytmp3-*`, tag `latest` + commit SHA). Server tidak pernah build sendiri — hanya pull. **Tidak perlu set secrets apa pun** — login GHCR di CI pakai `GITHUB_TOKEN` otomatis.
 
-Secrets yang harus di-set di GitHub repo (Settings → Secrets and variables → Actions):
+### Deploy: Manual di Server
 
-| Secret | Kegunaan |
-|--------|----------|
-| `SERVER_HOST` | IP/domain server |
-| `SERVER_USER` | User SSH |
-| `SERVER_SSH_KEY` | Private key SSH |
-| `GHCR_PAT` | Personal Access Token (scope `read:packages`) untuk login GHCR di server |
+Server bisa tanpa public IP (mis. Cloudflare Tunnel) — deploy cukup outbound (git, docker pull). Sekali saja, login GHCR di server:
+
+```bash
+docker login ghcr.io   # pakai GitHub token, scope read:packages
+```
+
+Tiap ada update:
+
+```bash
+cd /opt/projects/ytmp3
+git pull --ff-only          # ambil perubahan compose/Dockerfile kalau ada
+docker compose pull         # tarik image baru dari GHCR
+docker compose up -d        # recreate container yang berubah
+docker compose restart nginx
+```
+
+Verifikasi: `docker ps` (semua `healthy`) lalu `curl -sI https://domain.com`.
+
+**Rollback** ke versi lama (sha dari halaman commit GitHub):
+
+```bash
+cd /opt/projects/ytmp3
+docker pull ghcr.io/bits-cloud-platform/ytmp3-backend:<sha>
+docker pull ghcr.io/bits-cloud-platform/ytmp3-frontend:<sha>
+docker tag ghcr.io/bits-cloud-platform/ytmp3-backend:<sha> ghcr.io/bits-cloud-platform/ytmp3-backend:latest
+docker tag ghcr.io/bits-cloud-platform/ytmp3-frontend:<sha> ghcr.io/bits-cloud-platform/ytmp3-frontend:latest
+docker compose up -d
+docker compose restart nginx
+```
 
 Base image di-pin via digest (`python:3.12-slim`, `node:20-alpine`, `nginx:alpine`, `redis:7-alpine`) — rebuild reproducible, tidak ke-bust cache oleh update tag mengambang.
 
