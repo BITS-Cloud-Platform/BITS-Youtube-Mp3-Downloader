@@ -174,7 +174,11 @@ DEFAULT_ADMIN_PASSWORD=change-me-immediately
 
 ```bash
 # 4. Start all services
-docker compose up -d
+#    Production: pull prebuilt images from GHCR (CI builds on push to main)
+docker compose pull && docker compose up -d
+
+#    Local/dev: build from source instead
+docker compose up -d --build
 
 # 5. Access the application (single entrypoint via nginx)
 #    App : http://localhost:3004
@@ -183,15 +187,32 @@ docker compose up -d
 
 > **Note:** Only nginx exposes a host port (`3004 → 80`). `frontend` and `backend` have no host ports (`ports: []`) — they are reachable only inside the Docker network. All API requests go through nginx.
 
+### Automated Deployment (CI/CD)
+
+Push ke `main` memicu GitHub Actions (`.github/workflows/build-deploy.yml`): build image backend + frontend, push ke GHCR (`ghcr.io/bits-cloud-platform/ytmp3-*`, tag `latest` + commit SHA), lalu SSH ke server → `git pull` → `docker compose pull` → `up -d` → restart nginx. Server tidak pernah build sendiri.
+
+Secrets yang harus di-set di GitHub repo (Settings → Secrets and variables → Actions):
+
+| Secret | Kegunaan |
+|--------|----------|
+| `SERVER_HOST` | IP/domain server |
+| `SERVER_USER` | User SSH |
+| `SERVER_SSH_KEY` | Private key SSH |
+| `GHCR_PAT` | Personal Access Token (scope `read:packages`) untuk login GHCR di server |
+
+Base image di-pin via digest (`python:3.12-slim`, `node:20-alpine`, `nginx:alpine`, `redis:7-alpine`) — rebuild reproducible, tidak ke-bust cache oleh update tag mengambang.
+
 ### Docker Services
 
-| Service | Image/Build | Host Port | Internal Port | Description |
-|---------|-------------|-----------|---------------|-------------|
-| `nginx` | `nginx:alpine` | `3004` | 80 | Reverse proxy (routes `/api/` & `/download/` → backend, rest → frontend) |
-| `frontend` | `./frontend` (Dockerfile) | — | 3000 | Next.js UI |
-| `backend` | `./backend` (Dockerfile) | — | 8000 | FastAPI server |
-| `worker` | `./backend` (Dockerfile) | — | — | Celery async worker (`--concurrency=2`) |
-| `redis` | `redis:7-alpine` | — | 6379 | Queue & cache |
+| Service | Image | Host Port | Internal Port | Description |
+|---------|-------|-----------|---------------|-------------|
+| `nginx` | `nginx:alpine` (digest-pinned) | `3004` | 80 | Reverse proxy (routes `/api/` & `/download/` → backend, rest → frontend) |
+| `frontend` | `ghcr.io/bits-cloud-platform/ytmp3-frontend:latest` | — | 3000 | Next.js UI |
+| `backend` | `ghcr.io/bits-cloud-platform/ytmp3-backend:latest` | — | 8000 | FastAPI server |
+| `worker` | `ghcr.io/bits-cloud-platform/ytmp3-backend:latest` | — | — | Celery async worker (`--concurrency=2`) |
+| `redis` | `redis:7-alpine` (digest-pinned) | — | 6379 | Queue & cache |
+
+Semua service punya `healthcheck`; `depends_on` pakai `condition: service_healthy` — container hanya start saat dependensinya sehat.
 
 ---
 

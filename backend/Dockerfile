@@ -1,11 +1,9 @@
 # Stage 1: Build dependencies
-FROM python:3.12-slim AS builder
+FROM python:3.12-slim@sha256:57cd7c3a7a273101a6485ba99423ee568157882804b1124b4dd04266317710de AS builder
 
 RUN apt-get update && apt-get install -y \
     curl \
     unzip \
-    ffmpeg \
-    yt-dlp \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Deno for yt-dlp anti-bot
@@ -14,16 +12,15 @@ RUN curl -fsSL https://deno.land/install.sh | sh
 WORKDIR /app
 
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN --mount=type=cache,target=/root/.cache/pip pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
 # Stage 2: Production runtime
-FROM python:3.12-slim
+FROM python:3.12-slim@sha256:57cd7c3a7a273101a6485ba99423ee568157882804b1124b4dd04266317710de
 
 RUN apt-get update && apt-get install -y \
     ffmpeg \
-    yt-dlp \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
