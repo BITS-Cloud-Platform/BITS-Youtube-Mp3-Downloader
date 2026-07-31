@@ -66,7 +66,7 @@ def download_playlist(self, job_id: int, playlist_url: str):
     db.commit()
 
     # User paths
-    user_cookies = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data", "users", str(job.user_id), "cookies.txt")
+    user_cookies = os.path.join(os.environ.get("DATA_DIR", "/app/data"), "users", str(job.user_id), "cookies.txt")
     out_dir = os.path.join(STORAGE_DIR, str(job.user_id), str(job_id))
     os.makedirs(out_dir, exist_ok=True)
 

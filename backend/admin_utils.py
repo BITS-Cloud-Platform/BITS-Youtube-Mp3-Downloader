@@ -7,7 +7,7 @@ from sqlalchemy import func
 from models import Session, User, Job, PlaylistItem, Settings
 
 STORAGE_DIR = os.environ.get("STORAGE_DIR", "/app/storage")
-DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data")
+DATA_DIR = os.environ.get("DATA_DIR", "/app/data")
 
 def get_disk_usage() -> Dict:
     total, used, free = shutil.disk_usage(STORAGE_DIR)

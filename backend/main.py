@@ -36,7 +36,8 @@ if SECRET_KEY == "" or SECRET_KEY == "change-me-in-production":
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
 REFRESH_TOKEN_EXPIRE_DAYS = 30
-COOKIES_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data", "users")
+DATA_DIR = os.environ.get("DATA_DIR", "/app/data")
+COOKIES_DIR = os.path.join(DATA_DIR, "users")
 ALLOWED_ORIGINS = os.environ.get("ALLOWED_ORIGINS", "http://localhost:3000").split(",")
 PASSWORD_MIN_LENGTH = int(os.environ.get("PASSWORD_MIN_LENGTH", "8"))
 
