@@ -25,6 +25,10 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /app
 
+# yt-dlp config: enable EJS JS-challenge solver (needs deno, copied below)
+RUN mkdir -p /root/.config/yt-dlp
+COPY yt-dlp.conf /root/.config/yt-dlp/config
+
 # Copy Deno from builder
 COPY --from=builder /root/.deno/bin/deno /usr/local/bin/deno
 # Copy Python packages
