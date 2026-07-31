@@ -116,10 +116,12 @@ ytmp3/
 │   └── package.json
 ├── nginx/
 │   └── nginx.conf            # Nginx reverse proxy config
-├── data/                     # SQLite database (gitignored)
-├── storage/                  # Downloaded files (gitignored)
+├── data/                     # SQLite database — local dev only (gitignored)
+├── storage/                  # Downloaded files — local dev only (gitignored)
 ├── docker-compose.yml        # Docker orchestration
-├── .env.example              # Environment template
+├── .env.example              # Env template (committed to repo)
+├── .env.development          # Local dev config (gitignored)
+├── .env.production           # Production config, read by docker compose (gitignored)
 └── .gitignore
 ```
 
@@ -168,24 +170,28 @@ DEFAULT_ADMIN_EMAIL=admin@yourdomain.com
 DEFAULT_ADMIN_PASSWORD=change-me-immediately
 ```
 
+> **Note:** `NEXT_PUBLIC_API_URL` is a Next.js **build-time** variable. In `docker-compose.yml` it is passed as a build arg (`args: NEXT_PUBLIC_API_URL: https://ytmp3.bits.co.id`), not read from `.env.production`. To change it, edit `docker-compose.yml` and rebuild: `docker compose build frontend`.
+
 ```bash
 # 4. Start all services
 docker compose up -d
 
-# 5. Access the application
-#    Frontend : http://localhost:3000
-#    API      : http://localhost:8000
+# 5. Access the application (single entrypoint via nginx)
+#    App : http://localhost:3004
+#    API : http://localhost:3004/api/...
 ```
+
+> **Note:** Only nginx exposes a host port (`3004 → 80`). `frontend` and `backend` have no host ports (`ports: []`) — they are reachable only inside the Docker network. All API requests go through nginx.
 
 ### Docker Services
 
-| Service | Image/Build | Port (Internal) | Description |
-|---------|-------------|-----------------|-------------|
-| `nginx` | `nginx:alpine` | 80 | Reverse proxy |
-| `frontend` | `./frontend` (Dockerfile) | 3000 | Next.js UI |
-| `backend` | `./backend` (Dockerfile) | 8000 | FastAPI server |
-| `worker` | `./backend` (Dockerfile) | — | Celery async worker |
-| `redis` | `redis:7-alpine` | 6379 | Queue & cache |
+| Service | Image/Build | Host Port | Internal Port | Description |
+|---------|-------------|-----------|---------------|-------------|
+| `nginx` | `nginx:alpine` | `3004` | 80 | Reverse proxy (routes `/api/` & `/download/` → backend, rest → frontend) |
+| `frontend` | `./frontend` (Dockerfile) | — | 3000 | Next.js UI |
+| `backend` | `./backend` (Dockerfile) | — | 8000 | FastAPI server |
+| `worker` | `./backend` (Dockerfile) | — | — | Celery async worker (`--concurrency=2`) |
+| `redis` | `redis:7-alpine` | — | 6379 | Queue & cache |
 
 ---
 
@@ -205,12 +211,29 @@ docker compose up -d
 git clone https://github.com/BITS-Cloud-Platform/ytmp3.bits.co.id.git
 cd ytmp3.bits.co.id
 
-# Backend environment
-cp .env.example backend/.env
-# Edit backend/.env with your local paths
+# Backend environment — copy local dev template, then adjust paths
+cp .env.development backend/.env
+```
 
+**.env (backend) reference — local dev:**
+```env
+DATABASE_URL=sqlite:///./data/downloads.db
+REDIS_URL=redis://localhost:6379/0
+SECRET_KEY=dev-secret-key-change-in-production
+YTDL_FORMAT=m4a
+STORAGE_DIR=./storage
+ALLOWED_ORIGINS=http://localhost:3000
+PASSWORD_MIN_LENGTH=8
+```
+
+```bash
 # Frontend environment
-cp .env.example frontend/.env.local
+cp .env.development frontend/.env.local
+```
+
+**frontend/.env.local reference — local dev:**
+```env
+NEXT_PUBLIC_API_URL=http://localhost:8000
 ```
 
 ### 2. Install Redis
@@ -285,41 +308,43 @@ npm run dev
 
 ## ⚙️ Environment Configuration
 
-### Auto-Detection Logic
+### How Env Files Are Loaded
 
-The backend automatically detects the environment:
+**Backend** loads `backend/.env` if it exists, otherwise falls back to environment variables already set:
 
 ```python
 env_path = os.path.join(os.path.dirname(__file__), ".env")
 if os.path.exists(env_path):
     load_dotenv(env_path)    # Local development
 else:
-    load_dotenv()            # Docker / production
+    load_dotenv()            # Docker / production (env vars from compose)
 ```
+
+**Docker Compose** reads the root `.env.production` via `env_file:` and injects its values as container environment variables. The root `.env.development` / `.env.production` files are **not** auto-loaded by the backend — they are consumed by compose (or copied into `backend/.env` for local dev).
 
 ### File Structure
 
 ```
 ytmp3/
-├── .env.example            # Template — safe to commit
-├── .env.development        # Local dev config — gitignored
-├── .env.production         # Production config — gitignored
+├── .env.example            # Template — committed to repo
+├── .env.development        # Local dev config — gitignored (copy → backend/.env, frontend/.env.local)
+├── .env.production         # Production config — gitignored (read by docker-compose.yml)
 ├── backend/
-│   └── .env               # Backend local dev — gitignored
+│   └── .env               # Backend local dev — gitignored, auto-loaded by backend
 └── frontend/
-    └── .env.local         # Frontend local dev — gitignored
+    └── .env.local         # Frontend local dev — gitignored, read by Next.js
 ```
 
 ### Required Environment Variables
 
-| Variable | Description | Example |
-|----------|-------------|---------|
-| `DATABASE_URL` | SQLite database path | `sqlite:///./data/downloads.db` |
-| `REDIS_URL` | Redis connection URL | `redis://localhost:6379/0` |
-| `SECRET_KEY` | JWT signing secret | `openssl rand -hex 32` |
-| `STORAGE_DIR` | Download storage path | `./storage` |
-| `ALLOWED_ORIGINS` | CORS allowed origins | `http://localhost:3000` |
-| `NEXT_PUBLIC_API_URL` | Backend URL for frontend | `http://localhost:8000` |
+| Variable | Description | Example (local dev) | Example (Docker) |
+|----------|-------------|---------------------|-------------------|
+| `DATABASE_URL` | SQLite database path | `sqlite:///./data/downloads.db` | `sqlite:////app/data/downloads.db` |
+| `REDIS_URL` | Redis connection URL | `redis://localhost:6379/0` | `redis://redis:6379/0` |
+| `SECRET_KEY` | JWT signing secret | `openssl rand -hex 32` | `openssl rand -hex 32` |
+| `STORAGE_DIR` | Download storage path | `./storage` | `/app/storage` |
+| `ALLOWED_ORIGINS` | CORS allowed origins | `http://localhost:3000` | `https://ytmp3.bits.co.id` |
+| `NEXT_PUBLIC_API_URL` | Backend URL for frontend | `http://localhost:8000` | build arg in `docker-compose.yml` |
 
 ### Optional Variables
 
@@ -436,7 +461,9 @@ Password: (set via DEFAULT_ADMIN_PASSWORD in .env)
 |--------|-------|-------------|
 | `app_data` | `/app/data` | SQLite database & app data |
 | `app_storage` | `/app/storage` | Downloaded audio files |
-| `redis_data` | (Redis internal) | Redis persistence |
+| `redis_data` | `/data` | Redis persistence |
+
+Shared between `backend` and `worker` (both mount `app_data` and `app_storage`) so both see the same DB and downloaded files. On the host, volumes live under `/var/lib/docker/volumes/ytmp3_*`. The gitignored `data/` and `storage/` folders at the project root are **not** used by Docker — they are for local dev only.
 
 ---
 
@@ -464,10 +491,11 @@ Default timeout is 3 minutes per item. For large files or slow connections, adju
 
 ### Database or Storage Path Issues
 
-- Ensure `data/` and `storage/` directories exist:
+- **Local dev only**: ensure `data/` and `storage/` directories exist in the project root:
   ```bash
   mkdir -p data storage
   ```
+  Docker does **not** need this — named volumes are created automatically on first `docker compose up`.
 - Check `DATABASE_URL` and `STORAGE_DIR` in your environment file
 - For Docker, verify paths use container paths (`/app/...`)
 
