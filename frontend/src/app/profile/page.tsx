@@ -126,7 +126,7 @@ export default function ProfilePage() {
               <User className="w-6 h-6" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-white tracking-tight">BITS YTMP3</h1>
+              <h1 className="text-2xl font-bold text-white tracking-tight">BITS YouTube Mp3 Downloader</h1>
               <p className="text-sm text-zinc-500">Profile</p>
             </div>
           </div>
