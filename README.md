@@ -1,41 +1,23 @@
 <div align="center">
   <h1>YTMp3.in</h1>
-  <p><strong>YouTube Audio Downloader</strong></p>
   <p>
-    <a href="https://ytmp3.bits.co.id" target="_blank">ytmp3.bits.co.id</a> ·
-    <a href="https://bits.co.id" target="_blank">Banten IT Solutions</a>
+    <a href="https://ytmp3.bits.co.id" target="_blank">
+      <img src="https://img.shields.io/badge/ytmp3.bits.co.id-Online-00C853?style=for-the-badge&logo=statuspage&logoColor=white" alt="ytmp3.bits.co.id Online" />
+    </a>
   </p>
   <p>
-    Download, Convert, Enjoy — Free & Fast YouTube to MP3/M4A Converter
+    Fast YouTube audio downloader with playlist support, cookie upload, and admin controls
   </p>
   <br>
   <p>
-    <img src="https://img.shields.io/badge/Next.js-15-black?style=flat&logo=next.js" alt="Next.js 15" />
-    <img src="https://img.shields.io/badge/Python-3.12-blue?style=flat&logo=python" alt="Python 3.12" />
-    <img src="https://img.shields.io/badge/FastAPI-0.115-009688?style=flat&logo=fastapi" alt="FastAPI" />
-    <img src="https://img.shields.io/badge/Docker-Compose-2496ED?style=flat&logo=docker" alt="Docker Compose" />
+    <img src="https://img.shields.io/badge/Next.js-16-000000?style=flat&logo=next.js&logoColor=white" alt="Next.js 16" />
+    <img src="https://img.shields.io/badge/Python-3.12-3776AB?style=flat&logo=python&logoColor=white" alt="Python 3.12" />
+    <img src="https://img.shields.io/badge/FastAPI-0.141.1-009688?style=flat&logo=fastapi&logoColor=white" alt="FastAPI" />
+    <img src="https://img.shields.io/badge/Celery-5.6.3-37814A?style=flat&logo=celery&logoColor=white" alt="Celery" />
+    <img src="https://img.shields.io/badge/Docker-Compose-2496ED?style=flat&logo=docker&logoColor=white" alt="Docker Compose" />
     <img src="https://img.shields.io/badge/license-MIT-green?style=flat" alt="MIT License" />
-    <img src="https://img.shields.io/badge/status-live-success" alt="Status Live" />
   </p>
 </div>
-
----
-
-## 📋 Table of Contents
-
-- [Features](#features)
-- [Live Demo](#live-demo)
-- [Tech Stack](#tech-stack)
-- [Project Structure](#project-structure)
-- [Quick Start (Docker)](#quick-start-docker)
-- [Development](#development)
-- [Environment Configuration](#environment-configuration)
-- [API Endpoints](#api-endpoints)
-- [Admin Panel](#admin-panel)
-- [Docker Volumes](#docker-volumes)
-- [Troubleshooting](#troubleshooting)
-- [Security Notes](#security-notes)
-- [License](#license)
 
 ---
 
@@ -43,21 +25,21 @@
 
 | Feature | Description |
 |---------|-------------|
-| **Download YouTube Videos & Playlists** | Single video or full playlist with progress tracking |
-| **Multi-Format Audio Conversion** | M4A (original), MP3, OPUS, OGG, FLAC |
-| **Real-Time Progress** | Live download and conversion progress updates |
-| **Cancel & Resume** | Cancel ongoing downloads and resume them later |
-| **User Authentication** | Register, login, profile management with JWT |
-| **Admin Dashboard** | User management, job monitoring, disk usage, system stats |
-| **Anti-Bot Protection** | Bypass YouTube bot detection using Deno runtime |
-| **Docker Support** | One-command deployment with Docker Compose |
-| **Responsive UI** | Modern, mobile-friendly interface built with TailwindCSS |
+| **YouTube Playlist Download** | Download single videos or full playlists in one job |
+| **Cookie Upload Support** | Handle members-only, private, or age-restricted content |
+| **Audio Conversion** | Export audio in the configured format with yt-dlp |
+| **Job Queue** | Background processing with Celery and Redis |
+| **Resume & Cancel** | Resume unfinished jobs and cancel active ones |
+| **User Authentication** | Register, login, refresh, logout, profile management |
+| **Admin Panel** | User, job, settings, cleanup, and system stats tools |
+| **Reverse Proxy Ready** | Frontend and API deployable behind Nginx or tunnel |
+| **Modern UI** | Next.js app with Tailwind CSS and responsive layout |
 
 ---
 
 ## 🌐 Live Demo
 
-The application is live and running at:
+The application is live at:
 
 <div align="center">
   <a href="https://ytmp3.bits.co.id" style="font-size: 1.5em; font-weight: bold;">
@@ -70,515 +52,239 @@ The application is live and running at:
 ## 🛠️ Tech Stack
 
 | Layer | Technology |
-|-------|-----------|
-| **Frontend** | Next.js 15, TypeScript, TailwindCSS |
-| **Backend** | FastAPI (Python 3.12), SQLAlchemy, Celery |
-| **Queue & Cache** | Redis 7 |
-| **Downloader** | yt-dlp with Deno runtime (anti-bot) |
-| **Converter** | FFmpeg |
-| **Auth** | JWT (access + refresh tokens) + bcrypt |
-| **Container** | Docker & Docker Compose |
-| **Reverse Proxy** | Nginx |
+|-------|------------|
+| **Frontend** | Next.js 16, React 19, TypeScript, Tailwind CSS, Axios, Lucide React, React Hot Toast |
+| **Backend** | FastAPI, SQLAlchemy, Pydantic, bcrypt, python-jose |
+| **Queue & Cache** | Celery, Redis |
+| **Downloader** | yt-dlp with Deno impersonation support |
+| **Storage** | SQLite |
+| **Container** | Docker, Docker Compose, Nginx |
 
 ---
 
 ## 📁 Project Structure
 
-```
-ytmp3/
+```text
+ytmp3.bits.co.id/
 ├── backend/
-│   ├── main.py              # FastAPI application & routes
-│   ├── models.py            # SQLAlchemy database models
-│   ├── tasks.py             # Celery async tasks
+│   ├── main.py              # FastAPI app, auth, jobs, download endpoints
 │   ├── admin_routes.py      # Admin API endpoints
-│   ├── admin_utils.py       # Admin utility functions
-│   ├── create_admin.py      # Default admin auto-creator
+│   ├── admin_utils.py       # Admin settings and helpers
 │   ├── celery_app.py        # Celery configuration
+│   ├── create_admin.py      # Default admin bootstrap
+│   ├── models.py            # SQLAlchemy models and DB setup
+│   ├── tasks.py             # Playlist download worker task
 │   ├── requirements.txt     # Python dependencies
-│   └── Dockerfile           # Backend & worker container
+│   └── yt-dlp.conf          # yt-dlp config
 ├── frontend/
-│   ├── src/
-│   │   ├── app/
-│   │   │   ├── page.tsx            # Landing page
-│   │   │   ├── layout.tsx          # Root layout
-│   │   │   ├── login/              # Login page
-│   │   │   ├── signup/             # Registration
-│   │   │   ├── dashboard/          # User dashboard
-│   │   │   ├── profile/            # User profile
-│   │   │   └── admin/              # Admin panel
-│   │   │       ├── page.tsx        # Dashboard overview
-│   │   │       ├── users/          # User management
-│   │   │       ├── jobs/           # Job monitoring
-│   │   │       └── settings/       # System settings
-│   │   ├── components/             # Shared UI components
-│   │   └── globals.css             # Global styles
-│   ├── Dockerfile
-│   └── package.json
+│   ├── src/app/             # Landing page, auth, dashboard, admin pages
+│   ├── src/components/      # UI components
+│   ├── package.json         # Frontend scripts and deps
+│   └── Dockerfile           # Frontend container
 ├── nginx/
-│   └── nginx.conf            # Nginx reverse proxy config
-├── data/                     # SQLite database — local dev only (gitignored)
-├── storage/                  # Downloaded files — local dev only (gitignored)
-├── docker-compose.yml        # Docker orchestration
-├── .env.example              # Env template (committed to repo)
-├── .env.development          # Local dev config (gitignored)
-├── .env.production           # Production config, read by docker compose (gitignored)
-└── .gitignore
+│   └── nginx.conf           # Reverse proxy config
+├── data/                    # Local SQLite data and cookie storage
+├── storage/                 # Download output volume
+├── docker-compose.yml       # Local and production orchestration
+├── .env.example             # Environment template
+├── .github/workflows/       # Build and push pipeline
+├── LICENSE                  # MIT license
+└── README.md
 ```
 
 ---
 
-## 🚀 Quick Start (Docker)
-
-The fastest way to deploy the project in production:
+## 🚀 Quick Start
 
 ### Prerequisites
 
-- Docker & Docker Compose v2+
+- Docker and Docker Compose v2+
 - Git
 
 ### Steps
 
 ```bash
-# 1. Clone the repository
 git clone https://github.com/BITS-Cloud-Platform/ytmp3.bits.co.id.git
 cd ytmp3.bits.co.id
-
-# 2. Copy the production environment template
 cp .env.example .env.production
-
-# 3. Edit the production environment
-#    IMPORTANT: Generate a strong SECRET_KEY (see below)
-nano .env.production
 ```
 
-**Generate a secure SECRET_KEY:**
-```bash
-openssl rand -hex 32
-```
+Edit `.env.production`:
 
-**.env.production reference:**
 ```env
 DATABASE_URL=sqlite:////app/data/downloads.db
 REDIS_URL=redis://redis:6379/0
-SECRET_KEY=generate-a-secure-random-key-here
+SECRET_KEY=generate-a-secure-random-key
 YTDL_FORMAT=m4a
 STORAGE_DIR=/app/storage
-ALLOWED_ORIGINS=http://localhost:3000,https://yourdomain.com
+ALLOWED_ORIGINS=http://localhost:3000,https://ytmp3.bits.co.id
 PASSWORD_MIN_LENGTH=8
-NEXT_PUBLIC_API_URL=https://yourdomain.com
+NEXT_PUBLIC_API_URL=https://ytmp3.bits.co.id
 DEFAULT_ADMIN_EMAIL=admin@yourdomain.com
 DEFAULT_ADMIN_PASSWORD=change-me-immediately
 ```
 
-> **Note:** `NEXT_PUBLIC_API_URL` is a Next.js **build-time** variable. In `docker-compose.yml` it is passed as a build arg (`args: NEXT_PUBLIC_API_URL: https://ytmp3.bits.co.id`), not read from `.env.production`. To change it, edit `docker-compose.yml` and rebuild: `docker compose build frontend`.
+Start services:
 
 ```bash
-# 4. Start all services
-#    Production: pull prebuilt images from GHCR (CI builds on push to main)
-docker compose pull && docker compose up -d
-
-#    Local/dev: build from source instead
 docker compose up -d --build
-
-# 5. Access the application (single entrypoint via nginx)
-#    App : http://localhost:3004
-#    API : http://localhost:3004/api/...
 ```
 
-> **Note:** Only nginx exposes a host port (`3004 → 80`). `frontend` and `backend` have no host ports (`ports: []`) — they are reachable only inside the Docker network. All API requests go through nginx.
+Access:
 
-### CI: Build & Push (otomatis)
+- App: `http://localhost:3004`
+- API: `http://localhost:3004/api/...`
 
-Push ke `main` memicu GitHub Actions (`.github/workflows/build-push.yml`): build image backend + frontend, push ke GHCR (`ghcr.io/bits-cloud-platform/ytmp3-*`, tag `latest` + commit SHA). Server tidak pernah build sendiri — hanya pull. **Tidak perlu set secrets apa pun** — login GHCR di CI pakai `GITHUB_TOKEN` otomatis.
-
-### Deploy: Manual di Server
-
-Server bisa tanpa public IP (mis. Cloudflare Tunnel) — deploy cukup outbound (git, docker pull). Sekali saja, login GHCR di server:
+Build:
 
 ```bash
-docker login ghcr.io   # pakai GitHub token, scope read:packages
+docker compose build
 ```
 
-Tiap ada update:
+Deploy:
 
 ```bash
-cd /opt/projects/ytmp3
-git pull --ff-only          # ambil perubahan compose/Dockerfile kalau ada
-docker compose pull         # tarik image baru dari GHCR
-docker compose up -d        # recreate container yang berubah
-docker compose restart nginx
+docker compose pull && docker compose up -d
 ```
-
-Verifikasi: `docker ps` (semua `healthy`) lalu `curl -sI https://domain.com`.
-
-**Rollback** ke versi lama (sha dari halaman commit GitHub):
-
-```bash
-cd /opt/projects/ytmp3
-docker pull ghcr.io/bits-cloud-platform/ytmp3-backend:<sha>
-docker pull ghcr.io/bits-cloud-platform/ytmp3-frontend:<sha>
-docker tag ghcr.io/bits-cloud-platform/ytmp3-backend:<sha> ghcr.io/bits-cloud-platform/ytmp3-backend:latest
-docker tag ghcr.io/bits-cloud-platform/ytmp3-frontend:<sha> ghcr.io/bits-cloud-platform/ytmp3-frontend:latest
-docker compose up -d
-docker compose restart nginx
-```
-
-Base image di-pin via digest (`python:3.12-slim`, `node:20-alpine`, `nginx:alpine`, `redis:7-alpine`) — rebuild reproducible, tidak ke-bust cache oleh update tag mengambang.
-
-### Docker Services
-
-| Service | Image | Host Port | Internal Port | Description |
-|---------|-------|-----------|---------------|-------------|
-| `nginx` | `nginx:alpine` (digest-pinned) | `3004` | 80 | Reverse proxy (routes `/api/` & `/download/` → backend, rest → frontend) |
-| `frontend` | `ghcr.io/bits-cloud-platform/ytmp3-frontend:latest` | — | 3000 | Next.js UI |
-| `backend` | `ghcr.io/bits-cloud-platform/ytmp3-backend:latest` | — | 8000 | FastAPI server |
-| `worker` | `ghcr.io/bits-cloud-platform/ytmp3-backend:latest` | — | — | Celery async worker (`--concurrency=2`) |
-| `redis` | `redis:7-alpine` (digest-pinned) | — | 6379 | Queue & cache |
-
-Semua service punya `healthcheck`; `depends_on` pakai `condition: service_healthy` — container hanya start saat dependensinya sehat.
 
 ---
 
 ## 💻 Development
 
-### Prerequisites
+### Scripts
 
-- Python 3.12+
-- Node.js 18+
-- Redis 7+
-- Deno (for yt-dlp anti-bot)
-- FFmpeg
+| Command | Description |
+|---------|-------------|
+| `docker compose up -d --build` | Build and run full stack |
+| `docker compose up -d` | Run with existing images |
+| `docker compose pull` | Pull latest GHCR images |
+| `docker compose logs -f` | Follow service logs |
 
-### 1. Clone & Setup Environment
+### Local notes
 
-```bash
-git clone https://github.com/BITS-Cloud-Platform/ytmp3.bits.co.id.git
-cd ytmp3.bits.co.id
-
-# Backend environment — copy local dev template, then adjust paths
-cp .env.development backend/.env
-```
-
-**.env (backend) reference — local dev:**
-```env
-DATABASE_URL=sqlite:///./data/downloads.db
-DATA_DIR=./data
-REDIS_URL=redis://localhost:6379/0
-SECRET_KEY=dev-secret-key-change-in-production
-YTDL_FORMAT=m4a
-STORAGE_DIR=./storage
-ALLOWED_ORIGINS=http://localhost:3000
-PASSWORD_MIN_LENGTH=8
-```
-
-```bash
-# Frontend environment
-cp .env.development frontend/.env.local
-```
-
-**frontend/.env.local reference — local dev:**
-```env
-NEXT_PUBLIC_API_URL=http://localhost:8000
-```
-
-### 2. Install Redis
-
-```bash
-# Ubuntu / Debian
-sudo apt install redis-server
-
-# macOS
-brew install redis
-```
-
-### 3. Install Deno
-
-```bash
-curl -fsSL https://deno.land/install.sh | sh
-```
-
-### 4. Backend Setup
-
-```bash
-cd backend
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-```
-
-### 5. Frontend Setup
-
-```bash
-cd frontend
-npm install
-```
-
-### 6. Run Services
-
-Open separate terminals for each service:
-
-**Terminal 1 — Redis:**
-```bash
-redis-server
-```
-
-**Terminal 2 — Celery Worker:**
-```bash
-cd backend
-source .venv/bin/activate
-export PATH="$HOME/.deno/bin:$PATH"
-celery -A tasks worker --loglevel=info --concurrency=2
-```
-
-**Terminal 3 — Backend:**
-```bash
-cd backend
-source .venv/bin/activate
-export PATH="$HOME/.deno/bin:$PATH"
-uvicorn main:app --host 0.0.0.0 --port 8000 --reload
-```
-
-**Terminal 4 — Frontend:**
-```bash
-cd frontend
-npm run dev
-```
-
-### 7. Access
-
-- **Frontend**: http://localhost:3000
-- **API**: http://localhost:8000
+- `backend/` stores SQLite schema, auth, job queue, and download logic
+- `frontend/` contains Next.js UI and admin screens
+- `data/` and `storage/` persist user cookies and downloaded files
 
 ---
 
 ## ⚙️ Environment Configuration
 
-### How Env Files Are Loaded
+### Required variables
 
-**Backend** loads `backend/.env` if it exists, otherwise falls back to environment variables already set:
+| Variable | Description |
+|----------|-------------|
+| `DATABASE_URL` | SQLite connection string |
+| `REDIS_URL` | Redis connection string |
+| `SECRET_KEY` | JWT signing secret |
+| `YTDL_FORMAT` | Default output format |
+| `STORAGE_DIR` | Download storage path |
+| `ALLOWED_ORIGINS` | CORS allowlist |
+| `PASSWORD_MIN_LENGTH` | Minimum password length |
+| `NEXT_PUBLIC_API_URL` | Frontend API base URL |
+| `DEFAULT_ADMIN_EMAIL` | Seed admin email |
+| `DEFAULT_ADMIN_PASSWORD` | Seed admin password |
 
-```python
-env_path = os.path.join(os.path.dirname(__file__), ".env")
-if os.path.exists(env_path):
-    load_dotenv(env_path)    # Local development
-else:
-    load_dotenv()            # Docker / production (env vars from compose)
+### Production domain
+
+`docker-compose.yml` points frontend build args to:
+
+```env
+NEXT_PUBLIC_API_URL=https://ytmp3.bits.co.id
 ```
 
-**Docker Compose** reads the root `.env.production` via `env_file:` and injects its values as container environment variables. The root `.env.development` / `.env.production` files are **not** auto-loaded by the backend — they are consumed by compose (or copied into `backend/.env` for local dev).
-
-### File Structure
-
-```
-ytmp3/
-├── .env.example            # Template — committed to repo
-├── .env.development        # Local dev config — gitignored (copy → backend/.env, frontend/.env.local)
-├── .env.production         # Production config — gitignored (read by docker-compose.yml)
-├── backend/
-│   └── .env               # Backend local dev — gitignored, auto-loaded by backend
-└── frontend/
-    └── .env.local         # Frontend local dev — gitignored, read by Next.js
-```
-
-### Required Environment Variables
-
-| Variable | Description | Example (local dev) | Example (Docker) |
-|----------|-------------|---------------------|-------------------|
-| `DATABASE_URL` | SQLite database path | `sqlite:///./data/downloads.db` | `sqlite:////app/data/downloads.db` |
-| `DATA_DIR` | App data dir (SQLite, cookies per user) | `./data` | `/app/data` |
-| `REDIS_URL` | Redis connection URL | `redis://localhost:6379/0` | `redis://redis:6379/0` |
-| `SECRET_KEY` | JWT signing secret | `openssl rand -hex 32` | `openssl rand -hex 32` |
-| `STORAGE_DIR` | Download storage path | `./storage` | `/app/storage` |
-| `ALLOWED_ORIGINS` | CORS allowed origins | `http://localhost:3000` | `https://ytmp3.bits.co.id` |
-| `NEXT_PUBLIC_API_URL` | Backend URL for frontend | `http://localhost:8000` | build arg in `docker-compose.yml` |
-
-### Optional Variables
-
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `PASSWORD_MIN_LENGTH` | Minimum password length | `8` |
-| `YTDL_FORMAT` | Default download format | `m4a` |
-| `DEFAULT_ADMIN_EMAIL` | Auto-created admin email | `admin@mail.com` |
-| `DEFAULT_ADMIN_PASSWORD` | Auto-created admin password | `change-me` |
+Change that value if domain changes, then rebuild frontend image.
 
 ---
 
 ## 📡 API Endpoints
 
-### Authentication
+### Health
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| `POST` | `/api/auth/register` | Register new user |
-| `POST` | `/api/auth/login` | Login |
-| `POST` | `/api/auth/logout` | Logout |
-| `GET` | `/api/auth/profile` | Get user profile |
-| `PUT` | `/api/auth/update-profile` | Update profile |
+| `GET` | `/api/health` | Service health check |
+
+### Auth
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/api/auth/register` | Register user |
+| `POST` | `/api/auth/login` | Login user |
+| `POST` | `/api/auth/refresh` | Refresh access token |
+| `POST` | `/api/auth/logout` | Logout user |
+| `GET` | `/api/auth/profile` | Current profile |
 | `POST` | `/api/auth/change-password` | Change password |
+| `PUT` | `/api/auth/update-profile` | Update profile |
+
+### Cookies
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/api/cookies/upload` | Upload cookies.txt |
+| `GET` | `/api/cookies/status` | Check cookie status |
 
 ### Jobs
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| `GET` | `/api/jobs` | List all jobs |
-| `POST` | `/api/jobs` | Create new download job |
-| `DELETE` | `/api/jobs/{job_id}` | Delete job |
+| `GET` | `/api/jobs` | List jobs |
+| `POST` | `/api/jobs` | Create download job |
+| `GET` | `/api/jobs/{job_id}` | Get job detail |
+| `POST` | `/api/jobs/{job_id}/resume` | Resume job |
 | `POST` | `/api/jobs/{job_id}/cancel` | Cancel job |
-| `POST` | `/api/jobs/{job_id}/resume` | Resume cancelled job |
+| `DELETE` | `/api/jobs/{job_id}` | Delete job |
 
-### Downloads
+### Download
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| `GET` | `/api/download/{job_id}` | Download M4A (original) |
-| `GET` | `/api/download/{job_id}/{format}` | Download converted format |
-| `GET` | `/api/download/item/{item_id}/{format}` | Download playlist item |
+| `GET` | `/api/download/{job_id}` | Download job output |
+| `GET` | `/api/download/{job_id}/{format}` | Download in specific format |
+| `GET` | `/api/download/{job_id}/mp3` | Download MP3 |
+| `GET` | `/api/download/item/{item_id}` | Download item output |
+| `GET` | `/api/download/item/{item_id}/{format}` | Download item in specific format |
+| `GET` | `/api/download/item/{item_id}/mp3` | Download item MP3 |
 
 ### Admin
 
+Admin routes live under `/api/admin`.
+
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| `GET` | `/api/admin/stats` | Dashboard overview |
-| `GET` | `/api/admin/users` | List all users |
-| `GET` | `/api/admin/users/{id}` | User details |
-| `PUT` | `/api/admin/users/{id}` | Update user |
-| `DELETE` | `/api/admin/users/{id}` | Delete user & files |
-| `GET` | `/api/admin/jobs` | List all jobs with filters |
-| `POST` | `/api/admin/cleanup` | Run file cleanup |
+| `GET` | `/api/admin/stats` | System stats |
+| `GET` | `/api/admin/users` | List users |
+| `GET` | `/api/admin/users/{user_id}` | User detail |
+| `PUT` | `/api/admin/users/{user_id}` | Update user |
+| `DELETE` | `/api/admin/users/{user_id}` | Delete user |
+| `GET` | `/api/admin/jobs` | List jobs |
+| `DELETE` | `/api/admin/jobs/{job_id}` | Delete job |
+| `POST` | `/api/admin/jobs/{job_id}/cancel` | Cancel job |
+| `POST` | `/api/admin/jobs/{job_id}/resume` | Resume job |
+| `POST` | `/api/admin/cleanup` | Cleanup storage |
 | `GET` | `/api/admin/settings` | List settings |
 | `PUT` | `/api/admin/settings` | Update settings |
-| `GET` | `/api/admin/disk` | Disk usage stats |
+| `GET` | `/api/admin/disk` | Disk usage |
 
 ---
 
-## 🔐 Admin Panel
+## 🔐 Security Notes
 
-The application includes a full-featured admin dashboard accessible to users with admin privileges.
-
-### Default Admin Account
-
-On first startup, a default admin account is automatically created:
-
-```
-Email:    (set via DEFAULT_ADMIN_EMAIL in .env)
-Password: (set via DEFAULT_ADMIN_PASSWORD in .env)
-```
-
-> **⚠️ IMPORTANT:** Change the default password immediately after first login!
-
-### Accessing the Admin Panel
-
-1. Log in with admin credentials
-2. Click the **Shield icon** in the dashboard
-3. Navigate to **Users**, **Jobs**, or **Settings**
-
-### Admin Features
-
-| Feature | Description |
-|---------|-------------|
-| **Dashboard** | Overview stats (users, jobs, disk, CPU/RAM) |
-| **User Management** | List users, toggle active/admin status, delete users |
-| **Job Monitoring** | View all jobs across users, filter by status |
-| **Settings** | Configure retention days, max file size, auto-cleanup |
-| **File Cleanup** | Dry-run preview, delete old files by retention policy |
-| **Disk Usage** | Per-user and total storage analytics |
-
-### Default Settings
-
-| Setting | Default | Description |
-|---------|---------|-------------|
-| `cleanup_retention_days` | `30` | Days to keep completed jobs |
-| `max_file_size_mb` | `500` | Maximum download size |
-| `auto_cleanup_enabled` | `false` | Automatic cleanup toggle |
-
-### Security Notes for Admin
-
-- All admin routes verify the `is_admin` flag
-- Admins cannot remove their own admin access
-- Admins cannot delete their own account
-- User deletion permanently removes all associated files and jobs
-- Cleanup has a dry-run mode for safety
-
----
-
-## 📦 Docker Volumes
-
-| Volume | Mount | Description |
-|--------|-------|-------------|
-| `app_data` | `/app/data` | SQLite database & app data |
-| `app_storage` | `/app/storage` | Downloaded audio files |
-| `redis_data` | `/data` | Redis persistence |
-
-Shared between `backend` and `worker` (both mount `app_data` and `app_storage`) so both see the same DB and downloaded files. On the host, volumes live under `/var/lib/docker/volumes/ytmp3_*`. The gitignored `data/` and `storage/` folders at the project root are **not** used by Docker — they are for local dev only.
-
----
-
-## 🔧 Troubleshooting
-
-### Deno Not Found
-
-Ensure Deno is installed and in your PATH. For Docker, rebuild the image:
-
-```bash
-docker compose build backend worker
-```
-
-### CORS Errors
-
-Add your frontend URL to `ALLOWED_ORIGINS`:
-
-```env
-ALLOWED_ORIGINS=http://localhost:3000,https://yourdomain.com
-```
-
-### Download Timeout
-
-Default timeout is 3 minutes per item. For large files or slow connections, adjust the timeout in `backend/tasks.py`.
-
-### Database or Storage Path Issues
-
-- **Local dev only**: ensure `data/` and `storage/` directories exist in the project root:
-  ```bash
-  mkdir -p data storage
-  ```
-  Docker does **not** need this — named volumes are created automatically on first `docker compose up`.
-- Check `DATABASE_URL` and `STORAGE_DIR` in your environment file
-- For Docker, verify paths use container paths (`/app/...`)
-
----
-
-## 🛡️ Security Notes
-
-- **SECRET_KEY** must be a cryptographically random value generated with `openssl rand -hex 32`
-- **Never commit real `.env` files** to version control
-- Change default admin credentials immediately after deployment
-- All passwords are hashed using bcrypt before storage
-- JWT tokens expire; refresh tokens are used for seamless re-authentication
-- Admin routes are protected by role-based access control (`is_admin` flag)
-- CORS is enforced; only origins in `ALLOWED_ORIGINS` can access the API
-- The `.gitignore` is configured to exclude all sensitive files
+- Passwords hashed with bcrypt
+- JWT access and refresh token flow
+- Protected routes require auth cookies or bearer token
+- Cookie upload enables private content access
+- Download worker isolates long-running tasks
+- CORS allowlist configurable by environment
 
 ---
 
 ## 📄 License
 
-Distributed under the MIT License. See `LICENSE` for more information.
+Distributed under MIT License. See `LICENSE`.
 
 ---
 
 <div align="center">
-  <p>
-    <strong>YTMp3.in</strong> ·
-    <a href="https://ytmp3.bits.co.id">ytmp3.bits.co.id</a> ·
-    <a href="https://bits.co.id">bits.co.id</a>
-  </p>
-  <p>
-    Made with ❤️ by <a href="https://bits.co.id"><strong>Banten IT Solutions</strong></a>
-  </p>
-  <br>
-  <p>
-    <img src="https://img.shields.io/badge/status-live-success" alt="Status">
-    <img src="https://img.shields.io/badge/version-1.0.0-blue" alt="Version">
-    <img src="https://img.shields.io/badge/docker-ready-2496ED?logo=docker" alt="Docker">
-  </p>
+  <strong>YTMp3.in</strong> Developed with ❤️ by <a href="https://bits.co.id"><strong>Banten IT Solutions</strong></a>
 </div>
