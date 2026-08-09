@@ -1,8 +1,8 @@
 <div align="center">
-  <h1>YTMp3.in</h1>
+  <h1>BITS Youtube Mp3 Downloader</h1>
   <p>
     <a href="https://ytmp3.bits.co.id" target="_blank">
-      <img src="https://img.shields.io/badge/ytmp3.bits.co.id-Online-00C853?style=for-the-badge&logo=statuspage&logoColor=white" alt="ytmp3.bits.co.id Online" />
+      <img src="https://img.shields.io/badge/BITS%20Youtube%20Mp3%20Downloader-Online-00C853?style=for-the-badge&logo=statuspage&logoColor=white" alt="BITS Youtube Mp3 Downloader Online" />
     </a>
   </p>
   <p>
@@ -51,7 +51,7 @@
 ## 📁 Project Structure
 
 ```text
-ytmp3.bits.co.id/
+bits-youtube-mp3-downloader/
 ├── backend/
 │   ├── main.py              # FastAPI app, auth, jobs, download endpoints
 │   ├── admin_routes.py      # Admin API endpoints
@@ -90,8 +90,8 @@ ytmp3.bits.co.id/
 ### Steps
 
 ```bash
-git clone https://github.com/BITS-Cloud-Platform/ytmp3.bits.co.id.git
-cd ytmp3.bits.co.id
+git clone https://github.com/BITS-Cloud-Platform/bits-youtube-mp3-downloader.git
+cd bits-youtube-mp3-downloader
 cp .env.example .env.production
 ```
 
