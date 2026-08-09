@@ -35,20 +35,6 @@
 | **Reverse Proxy Ready** | Frontend and API deployable behind Nginx or tunnel |
 | **Modern UI** | Next.js app with Tailwind CSS and responsive layout |
 
----
-
-## 🌐 Live Demo
-
-The application is live at:
-
-<div align="center">
-  <a href="https://ytmp3.bits.co.id" style="font-size: 1.5em; font-weight: bold;">
-    🔗 https://ytmp3.bits.co.id
-  </a>
-</div>
-
----
-
 ## 🛠️ Tech Stack
 
 | Layer | Technology |
