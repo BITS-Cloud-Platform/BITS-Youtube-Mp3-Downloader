@@ -32,8 +32,8 @@ export default function LandingPage() {
         >
           <div className="text-center mb-12">
             <h1 className="text-6xl md:text-8xl font-bold text-white mb-4 tracking-tight animate-pulse-slow hover:scale-105 transition-transform duration-700">
-              YTMp3
-              <span className="text-zinc-500">.in</span>
+              BITS
+              <span className="text-zinc-500"> YTMP3</span>
             </h1>
             <div className="h-8 md:h-10 flex items-center justify-center">
               {loaded && <Typewriter text="Download YouTube playlists to MP3. Fast, private, and supports unlisted videos with cookie auth." />}
