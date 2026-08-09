@@ -54,7 +54,7 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(title="YTMp3.in", lifespan=lifespan)
+app = FastAPI(title="BITS YouTube Mp3 Downloader", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,

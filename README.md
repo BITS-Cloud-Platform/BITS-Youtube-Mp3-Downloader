@@ -272,5 +272,5 @@ Distributed under MIT License. See `LICENSE`.
 ---
 
 <div align="center">
-  <strong>YTMp3.in</strong> Developed with ❤️ by <a href="https://bits.co.id"><strong>Banten IT Solutions</strong></a>
+  <strong>BITS YouTube Mp3 Downloader</strong> Developed with ❤️ by <a href="https://bits.co.id"><strong>Banten IT Solutions</strong></a>
 </div>

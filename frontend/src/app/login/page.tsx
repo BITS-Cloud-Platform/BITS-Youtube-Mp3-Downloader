@@ -39,7 +39,7 @@ export default function LoginPage() {
         <div className="flex-1 flex items-center justify-center w-full">
           <div className="w-full max-w-md p-8 space-y-6 bg-zinc-900/80 backdrop-blur rounded-xl border border-zinc-800">
             <Link href="/" className="text-center block">
-              <h1 className="text-3xl font-bold">YTMp3.in</h1>
+              <h1 className="text-3xl font-bold">BITS YouTube Mp3 Downloader</h1>
             </Link>
 
             <form onSubmit={handleSubmit} className="space-y-4">
