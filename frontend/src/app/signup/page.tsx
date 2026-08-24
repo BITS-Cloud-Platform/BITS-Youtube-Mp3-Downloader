@@ -8,7 +8,7 @@ import Link from 'next/link';
 import ParticleBackground from '@/components/ParticleBackground';
 import LoadingSpinner from '@/components/LoadingSpinner';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+const API_URL = "";
 axios.defaults.withCredentials = true;
 
 export default function SignupPage() {

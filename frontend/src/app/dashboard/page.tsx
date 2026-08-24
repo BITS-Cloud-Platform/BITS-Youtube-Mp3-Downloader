@@ -31,7 +31,7 @@ type Job = {
   items?: PlaylistItem[];
 };
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+const API_URL = "";
 axios.defaults.withCredentials = true;
 
 export default function DashboardPage() {

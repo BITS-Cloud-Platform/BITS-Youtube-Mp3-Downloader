@@ -61,8 +61,6 @@ jobs:
         with:
           context: ./frontend
           push: true
-          build-args: |
-            NEXT_PUBLIC_API_URL=https://ytmp3.bits.co.id
           tags: |
             ghcr.io/bits-cloud-platform/ytmp3-frontend:latest
             ghcr.io/bits-cloud-platform/ytmp3-frontend:${{ github.sha }}

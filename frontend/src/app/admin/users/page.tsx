@@ -9,7 +9,7 @@ import AdminFooter from "@/components/AdminFooter";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import Modal from "@/components/Modal";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const API_URL = "";
 
 interface User {
   id: number;

@@ -107,7 +107,6 @@ YTDL_FORMAT=m4a
 STORAGE_DIR=/app/storage
 ALLOWED_ORIGINS=http://localhost:3000,https://ytmp3.bits.co.id
 PASSWORD_MIN_LENGTH=8
-NEXT_PUBLIC_API_URL=https://ytmp3.bits.co.id
 DEFAULT_ADMIN_EMAIL=admin@yourdomain.com
 DEFAULT_ADMIN_PASSWORD=change-me-immediately
 ```
@@ -169,19 +168,12 @@ docker compose pull && docker compose up -d
 | `STORAGE_DIR` | Download storage path |
 | `ALLOWED_ORIGINS` | CORS allowlist |
 | `PASSWORD_MIN_LENGTH` | Minimum password length |
-| `NEXT_PUBLIC_API_URL` | Frontend API base URL |
 | `DEFAULT_ADMIN_EMAIL` | Seed admin email |
 | `DEFAULT_ADMIN_PASSWORD` | Seed admin password |
 
 ### Production domain
 
-`docker-compose.yml` points frontend build args to:
-
-```env
-NEXT_PUBLIC_API_URL=https://ytmp3.bits.co.id
-```
-
-Change that value if domain changes, then rebuild frontend image.
+The frontend calls the API using **relative paths** (`/api/...`). Nginx routes `/api/` and `/download/` to the backend on the same origin, so the stack is domain-agnostic: changing domains requires no frontend rebuild. Update `ALLOWED_ORIGINS` if you serve the app from a different origin than the API.
 
 ---
 

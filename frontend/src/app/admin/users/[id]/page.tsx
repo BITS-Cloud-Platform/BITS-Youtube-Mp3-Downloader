@@ -8,7 +8,7 @@ import AdminNavbar from "@/components/AdminNavbar";
 import AdminFooter from "@/components/AdminFooter";
 import LoadingSpinner from "@/components/LoadingSpinner";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const API_URL = "";
 
 interface Job {
   id: number;
