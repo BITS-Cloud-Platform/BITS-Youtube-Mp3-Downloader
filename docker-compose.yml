@@ -4,6 +4,10 @@ x-default-logging: &default-logging
     max-size: "10m"
     max-file: "5"
 
+# Pin compose project name so CLI runs and Arcane deployments
+# always target the same containers/network (prevents duplicates).
+name: bitsyoutubemp3downloader
+
 services:
   nginx:
     image: nginx:stable-alpine
