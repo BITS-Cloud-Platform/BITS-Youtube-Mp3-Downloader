@@ -29,7 +29,7 @@ services:
     logging: *default-logging
     restart: unless-stopped
     networks:
-      - ytmp3-network
+      - app-network
 
   frontend:
     image: ghcr.io/bits-cloud-platform/ytmp3-frontend:latest
@@ -50,7 +50,7 @@ services:
     logging: *default-logging
     restart: unless-stopped
     networks:
-      - ytmp3-network
+      - app-network
 
   backend:
     image: ghcr.io/bits-cloud-platform/ytmp3-backend:latest
@@ -73,7 +73,7 @@ services:
     logging: *default-logging
     restart: unless-stopped
     networks:
-      - ytmp3-network
+      - app-network
 
   worker:
     image: ghcr.io/bits-cloud-platform/ytmp3-backend:latest
@@ -99,7 +99,7 @@ services:
     logging: *default-logging
     restart: unless-stopped
     networks:
-      - ytmp3-network
+      - app-network
 
   redis:
     image: redis:latest
@@ -113,16 +113,17 @@ services:
     logging: *default-logging
     restart: unless-stopped
     networks:
-      - ytmp3-network
+      - app-network
 
 volumes:
   app_data:
-    name: ytmp3_app_data
+    name: bitsyoutubemp3downloader_app_data
   app_storage:
-    name: ytmp3_app_storage
+    name: bitsyoutubemp3downloader_app_storage
   redis_data:
-    name: ytmp3_redis_data
+    name: bitsyoutubemp3downloader_redis_data
 
 networks:
-  ytmp3-network:
+  app-network:
+    name: bitsyoutubemp3downloader-network
     driver: bridge
