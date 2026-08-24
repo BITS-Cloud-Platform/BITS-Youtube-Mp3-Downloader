@@ -28,7 +28,8 @@ services:
         NEXT_PUBLIC_API_URL: https://ytmp3.bits.co.id
     ports: []
     env_file:
-      - .env.production
+      - path: .env.production
+        required: false
     depends_on:
       backend:
         condition: service_healthy
@@ -47,7 +48,8 @@ services:
     build: ./backend
     ports: []
     env_file:
-      - .env.production
+      - path: .env.production
+        required: false
     volumes:
       - app_data:/app/data
       - app_storage:/app/storage
@@ -69,7 +71,8 @@ services:
     build: ./backend
     command: celery -A tasks worker --loglevel=info --concurrency=2
     env_file:
-      - .env.production
+      - path: .env.production
+        required: false
     volumes:
       - app_data:/app/data
       - app_storage:/app/storage
