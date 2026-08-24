@@ -90,10 +90,12 @@ bits-youtube-mp3-downloader/
 ### Steps
 
 ```bash
-git clone https://github.com/BITS-Cloud-Platform/bits-youtube-mp3-downloader.git
-cd bits-youtube-mp3-downloader
+git clone https://github.com/BITS-Cloud-Platform/BITS-Youtube-Mp3-Downloader.git
+cd BITS-Youtube-Mp3-Downloader
 cp .env.example .env.production
 ```
+
+> **Important:** `.env.production` is gitignored (it contains secrets) and must be created manually before the first deploy. Compose will not fail without it, but the app will start unconfigured (missing `SECRET_KEY`, default admin credentials, etc.).
 
 Edit `.env.production`:
 
