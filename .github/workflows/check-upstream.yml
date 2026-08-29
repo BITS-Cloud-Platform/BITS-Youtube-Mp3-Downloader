@@ -18,16 +18,16 @@ jobs:
       - name: "🔍 Check Nginx"
         id: nginx
         run: |
-          docker pull nginx:alpine
-          DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' nginx:alpine | cut -d'@' -f2)
+          docker pull nginx:stable-alpine
+          DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' nginx:stable-alpine | cut -d'@' -f2)
           echo "digest=$DIGEST" >> $GITHUB_OUTPUT
           echo "Nginx: $DIGEST"
 
       - name: "🔍 Check Redis"
         id: redis
         run: |
-          docker pull redis:7-alpine
-          DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' redis:7-alpine | cut -d'@' -f2)
+          docker pull redis:latest
+          DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' redis:latest | cut -d'@' -f2)
           echo "digest=$DIGEST" >> $GITHUB_OUTPUT
           echo "Redis: $DIGEST"
 
