@@ -1,0 +1,8 @@
+# Local dev override - use build instead of pull
+services:
+  frontend:
+    build: ./frontend
+  backend:
+    build: ./backend
+  worker:
+    build: ./backend
