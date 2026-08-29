@@ -1,16 +1,16 @@
-name: "🚀 Forge & Ship"
+name: "🚀 Build & Ship"
 
 on:
   push:
     branches: [main]
 
 concurrency:
-  group: forge-${{ github.ref }}
+  group: build-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  forge-backend:
-    name: "⚙️ Forge Backend"
+  build-backend:
+    name: "⚙️ Build Backend"
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -40,8 +40,8 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  forge-frontend:
-    name: "🎨 Forge Frontend"
+  build-frontend:
+    name: "🎨 Build Frontend"
     runs-on: ubuntu-latest
     permissions:
       contents: read
