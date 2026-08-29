@@ -6,8 +6,12 @@ RUN apt-get update && apt-get install -y \
     unzip \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Deno for yt-dlp anti-bot
-RUN curl -fsSL https://deno.land/install.sh | sh
+# Install Deno for yt-dlp anti-bot - with retry and fallback to GitHub release
+RUN curl -fsSL --retry 5 --retry-delay 10 --retry-all-errors https://deno.land/install.sh | DENO_INSTALL=/root/.deno sh || \
+    (echo "deno.land 503, fallback to GitHub release..." && \
+     curl -fsSL --retry 5 --retry-delay 10 -o /tmp/deno.zip https://github.com/denoland/deno/releases/latest/download/deno-x86_64-unknown-linux-gnu.zip && \
+     mkdir -p /root/.deno/bin && unzip /tmp/deno.zip -d /root/.deno/bin && chmod +x /root/.deno/bin/deno && rm /tmp/deno.zip) && \
+    ls -lh /root/.deno/bin/deno && /root/.deno/bin/deno --version
 
 WORKDIR /app
 
