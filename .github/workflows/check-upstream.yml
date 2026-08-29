@@ -1,0 +1,50 @@
+name: "🌌 Warp Sync"
+
+on:
+  schedule:
+    - cron: '0 0 * * *' # Daily 07:00 WIB
+  workflow_dispatch:
+
+jobs:
+  warp-hunter:
+    name: "🛰️ Warp Hunter"
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: "📦 Checkout"
+        uses: actions/checkout@v4
+
+      - name: "🔍 Check Nginx"
+        id: nginx
+        run: |
+          docker pull nginx:alpine
+          DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' nginx:alpine | cut -d'@' -f2)
+          echo "digest=$DIGEST" >> $GITHUB_OUTPUT
+          echo "Nginx: $DIGEST"
+
+      - name: "🔍 Check Redis"
+        id: redis
+        run: |
+          docker pull redis:7-alpine
+          DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' redis:7-alpine | cut -d'@' -f2)
+          echo "digest=$DIGEST" >> $GITHUB_OUTPUT
+          echo "Redis: $DIGEST"
+
+      - name: "⚖️ Compare"
+        run: |
+          mkdir -p .upstream
+          echo "${{ steps.nginx.outputs.digest }}" > .upstream/nginx.digest
+          echo "${{ steps.redis.outputs.digest }}" > .upstream/redis.digest
+          git diff --color || true
+          git diff --quiet && echo "No update" && exit 0
+          echo "New warp found"
+
+      - name: "💾 Push"
+        run: |
+          git diff --quiet && exit 0
+          git config user.name "Warp Bot 🤖"
+          git config user.email "warp-bot@bits.co.id"
+          git add .upstream/
+          git commit -m "chore: bump nginx ${{ steps.nginx.outputs.digest }} redis ${{ steps.redis.outputs.digest }}"
+          git push
